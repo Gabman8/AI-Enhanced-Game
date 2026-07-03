@@ -1,7 +1,7 @@
-class character:
-    def __init (self, name, habilities, personaliy, type):
+class Character:
+    def __init__(self, name, abilities, personality, type):
         self.name = name
-        self.habilities = habilities
-        self.personaliy = personaliy
+        self.abilities = abilities
+        self.personality = personality
         self.type = type
     
