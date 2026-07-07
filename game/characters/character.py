@@ -1,6 +1,6 @@
 class Character:
     def __init__(self, name, abilities, personality, type, health, 
-                 strength,standing_image, walking_images, attacking_images):
+                 strength,standing_image, walking_image, attacking_image):
         self.name = name
         self.abilities = abilities
         self.personality = personality
@@ -8,8 +8,8 @@ class Character:
         self.health = health
         self.strength = strength
         self.standing_image = standing_image
-        self.walking_images = walking_images
-        self.attacking_images = attacking_images
+        self.walking_image = walking_image
+        self.attacking_image = attacking_image
     def get_name(self):
         return self.name
     def get_abilities(self):
@@ -28,4 +28,5 @@ class Character:
         self.strength = strength 
     def set_abilities(self, abilities):
         self.abilities = abilities
+    
     

@@ -1,16 +1,36 @@
+from levels.generate_characters import get_main_character
+from characters.character import Character
 class Game:
-    def __init__(self, game):
+    def __init__(self, game,screen,characters, background_image):
         self.game = game
+        self.screen = screen
+        self.characters = characters
+        self.resolution = screen.get_size()
+        self.background_image = background_image
+
     def create_game(self):
         pygame = self.game
-        screen = self.game.display
-        clock = pygame.time.clock
-        main_character = self.characters[main_character]
-        screen(background_image, (0, 0))
+        screen = self.screen
+        clock = self.game.time.Clock()
+        main_character = get_main_character()
+        main_character_image = main_character["image"]
+        # Ensure background is a Surface; allow passing a file path or a Surface
+        background = self.background_image
+        if isinstance(background, str):
+            background = pygame.image.load(background).convert()
+        screen.blit(background, (0, 0))
         main_character_image.set_alpha(255)
+        x = 0
+        y = 0
         screen.blit(main_character_image, (x, y))
         hitbox = pygame.Rect(x, y, main_character_image.get_width(), main_character_image.get_height())
         target = pygame.Rect(500, 30, 64, 64)
+        delta_time = 0.5
+        jumping = False
+        moving_right = False
+        moving_left = False
+        running_right = False
+        running_left = False
         collision = hitbox.colliderect(target)
         #pygame.draw.rect(screen, (255, 0, 0), target)
 
@@ -29,10 +49,6 @@ class Game:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-            ''' SAVE FOR MENU
-            if event.type == pygame.VIDEORESIZE:
-                resolution = screen.get_size()
-                background_image = pygame.transform.scale(background_image, resolution)'''
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_d:
                     moving_right = True
@@ -68,6 +84,9 @@ class Game:
 
         delta_time = pygame.time.Clock().tick(60) / 1000.0
         delta_time = min(delta_time, 0.1)
+    def get_characters(self,characters,character_name):
+        return self.characters.get(character_name)
+    
 
 
     

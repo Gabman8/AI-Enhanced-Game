@@ -10,7 +10,8 @@ SCREEN = pygame.display.set_mode((WIDTH, HEIGHT))
 # pygame.FULLSCREEN para poner panta
 RESOLUTION = SCREEN.get_size()
 MAP_DATA = generate_map("coast-landscape", (100, 100), ["trees", "rocks"], ["goblin", "troll"])
-CHARACTERS_DATA = generate_characters()
+CHARACTERS_DATA = generate_characters(pygame)
+
 
 #for multiple character this code will be usefull
 #characters = pygame.Surface((64, 64), pygame.SRCALPHA)
@@ -18,29 +19,33 @@ CHARACTERS_DATA = generate_characters()
 #characters.blit(main_character_image, (0, 0))
 running = True;
 clock = pygame.time.Clock()
-delta_time = 0.5
-jumping = False
-moving_right = False
-moving_left = False
-running_right = False
-running_left = False
 state = "Menu"
 
-#sound = pygame.mixer.Sound("sound.wav")
-background_image = pygame.image.load(MAP_DATA["image"]).convert()
-background_image = pygame.transform.scale( background_image, (WIDTH, HEIGHT))
-x = 0
-y = 0
-while running:
+main_menu = MainMenu(
+    pygame,
+    SCREEN,
+    "Red",
+    30,
+    "Courier"
+)
+background_image = MAP_DATA["image"]
+game = Game(
+    pygame, 
+    SCREEN, 
+    CHARACTERS_DATA,
+    RESOLUTION,
+    background_image
+)
 
-    if state == "Menu":
-        main_menu = MainMenu()
-        main_menu.__init__(pygame)
-        main_menu.create_menu()
-    else: 
-        game = Game()
-        game.__init__(pygame)
-        game.create_game()
+
+while running:
+    for event in pygame.event.get():
+        if state == "Menu":
+            main_menu.create_menu(SCREEN)
+            if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
+                state = "Game"
+        elif state == "Game":
+            game.create_game()
 
 pygame.quit()
 
