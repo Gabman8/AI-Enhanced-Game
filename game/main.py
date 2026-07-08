@@ -34,7 +34,6 @@ game = Game(
     0.5,
     direction,
 )
-
 while running:
     delta_time = clock.tick(60) / 1000.0
     delta_time = min(delta_time, 0.1)
