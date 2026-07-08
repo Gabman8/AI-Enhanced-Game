@@ -16,7 +16,7 @@ class Game:
         self.run_speed = 760
         self.jump_velocity = 700
         self.gravity = 1400
-        self.ground_y = self.screen.get_height() - 200
+        self.ground_y = self.screen.get_height() - 400
         if self.main_character is not None:
             self.main_character.y = self.ground_y
 
