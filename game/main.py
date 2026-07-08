@@ -7,45 +7,53 @@ from screens.game import Game
 pygame.init()
 WIDTH, HEIGHT = 2048, 1200
 SCREEN = pygame.display.set_mode((WIDTH, HEIGHT))
-# pygame.FULLSCREEN para poner panta
-RESOLUTION = SCREEN.get_size()
+pygame.display.set_caption("Independent AI World")
+
 MAP_DATA = generate_map("coast-landscape", (100, 100), ["trees", "rocks"], ["goblin", "troll"])
 CHARACTERS_DATA = generate_characters(pygame)
 
-
-#for multiple character this code will be usefull
-#characters = pygame.Surface((64, 64), pygame.SRCALPHA)
-#characters.blit(main_character_image, (0, 0))
-#characters.blit(main_character_image, (0, 0))
-running = True;
-clock = pygame.time.Clock()
+running = True
 state = "Menu"
-
+clock = pygame.time.Clock()
 main_menu = MainMenu(
     pygame,
+    running,
     SCREEN,
     "Red",
     30,
-    "Courier"
+    "Courier",
 )
 background_image = MAP_DATA["image"]
+direction = "Static"
 game = Game(
-    pygame, 
-    SCREEN, 
+    pygame,
+    running,
+    SCREEN,
     CHARACTERS_DATA,
-    RESOLUTION,
-    background_image
+    background_image,
+    0.5,
+    direction,
 )
 
-
 while running:
+    delta_time = clock.tick(60) / 1000.0
+    delta_time = min(delta_time, 0.1)
+
     for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+            break
+
         if state == "Menu":
-            main_menu.create_menu(SCREEN)
             if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
                 state = "Game"
         elif state == "Game":
-            game.create_game()
+            game.handle_event(event)
+
+    if state == "Menu":
+         main_menu.create_menu(event)
+    elif state == "Game":
+         game.create_game(event, delta_time)
 
 pygame.quit()
 
