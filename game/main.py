@@ -11,6 +11,7 @@ pygame.display.set_caption("Independent AI World")
 
 MAP_DATA = generate_map("coast-landscape", (100, 100), ["trees", "rocks"], ["goblin", "troll"])
 CHARACTERS_DATA = generate_characters(pygame)
+FPS = 144
 
 running = True
 state = "Menu"
@@ -35,7 +36,7 @@ game = Game(
     direction,
 )
 while running:
-    delta_time = clock.tick(60) / 1000.0
+    delta_time = clock.tick(FPS) / 1000.0
     delta_time = min(delta_time, 0.1)
 
     for event in pygame.event.get():
