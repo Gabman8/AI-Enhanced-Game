@@ -3,11 +3,12 @@ from characters.character import Character
 
 class RegularEnemy(Character):
     def __init__(self, name, abilities, personality, type, health, strength, 
-                 standing_image=None, walking_image=None, attacking_image=None):
+                 standing_image=None, running_images=None, attacking_images=None):
         
         super().__init__(name, abilities, personality, type, health, 
-                         strength, standing_image, walking_image, 
-                         attacking_image)
+                         strength, standing_image,
+                         running_images=running_images,
+                         attacking_images=attacking_images)
         self.name = "Regular Enemy"
         self.abilities = ["attack"]
         self.personality = "hostile"
@@ -15,5 +16,5 @@ class RegularEnemy(Character):
         self.health = 50
         self.strength = 20
         self.standing_image = standing_image if standing_image else "characters/images/viking.png"
-        self.walking_image = walking_image if walking_image else []
-        self.attacking_image = attacking_image if attacking_image else []
+        self.running_images = running_images if running_images else []
+        self.attacking_images = attacking_images if attacking_images else []

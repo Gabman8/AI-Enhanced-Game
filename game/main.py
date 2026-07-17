@@ -12,6 +12,7 @@ pygame.display.set_caption("Independent AI World")
 MAP_DATA = generate_map("coast-landscape", (100, 100), ["trees", "rocks"], ["goblin", "troll"])
 CHARACTERS_DATA = generate_characters(pygame)
 FPS = 144
+DEFAULT_BACKGROUND = "backgrounds/London_background.png"
 
 running = True
 state = "Menu"
@@ -24,7 +25,7 @@ main_menu = MainMenu(
     30,
     "Courier",
 )
-background_image = MAP_DATA["image"]
+background_image = MAP_DATA.get("image") or DEFAULT_BACKGROUND
 direction = "Static"
 game = Game(
     pygame,
@@ -38,6 +39,7 @@ game = Game(
 while running:
     delta_time = clock.tick(FPS) / 1000.0
     delta_time = min(delta_time, 0.1)
+    event = None
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:

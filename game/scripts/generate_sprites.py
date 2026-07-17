@@ -2,89 +2,154 @@ from pathlib import Path
 
 import cv2
 import numpy as np
-from rembg import remove
 
-# ---------------- CONFIG ----------------
+try:
+    from rembg import remove
+except ModuleNotFoundError:
+    remove = None
 
-character = "main_character"
 
-script_dir = Path(__file__).resolve().parent
-game_root = script_dir.parent
+CHARACTER = "main_character"
+MIN_SPRITE_AREA = 500
+ALPHA_THRESHOLD = 5
+BACKGROUND_TOLERANCE = 38
 
-image_path = game_root / "characters_images_raw" / "Main_running.png"
-output_path = game_root / "Main_running_no_bg.png"
+SCRIPT_DIR = Path(__file__).resolve().parent
+GAME_ROOT = SCRIPT_DIR.parent
+RAW_DIR = GAME_ROOT / "characters_images_raw"
+OUTPUT_ROOT = GAME_ROOT / "images" / CHARACTER
 
-out_dir = game_root / "images" / character
-out_dir.mkdir(parents=True, exist_ok=True)
+SPRITE_SHEETS = {
+    "running": RAW_DIR / "Main_running.png",
+    "attack": RAW_DIR / "Main_Attack.png",
+}
 
-print(f"Using image: {image_path}")
 
-# ---------------- REMOVE BACKGROUND ----------------
+def _remove_background_with_rembg(image_path, output_path):
+    with open(image_path, "rb") as image_file:
+        output = remove(image_file.read())
 
-with open(image_path, "rb") as f:
-    input_data = f.read()
+    with open(output_path, "wb") as image_file:
+        image_file.write(output)
 
-output = remove(input_data)
 
-with open(output_path, "wb") as f:
-    f.write(output)
+def _remove_background_with_corner_color(image_path, output_path):
+    img = cv2.imread(str(image_path), cv2.IMREAD_COLOR)
+    if img is None:
+        raise FileNotFoundError(image_path)
 
-print(f"Background removed -> {output_path}")
+    h, w = img.shape[:2]
+    corner_size = max(12, min(w, h) // 20)
+    corners = np.concatenate(
+        [
+            img[:corner_size, :corner_size].reshape(-1, 3),
+            img[:corner_size, -corner_size:].reshape(-1, 3),
+            img[-corner_size:, :corner_size].reshape(-1, 3),
+            img[-corner_size:, -corner_size:].reshape(-1, 3),
+        ]
+    )
+    background_color = np.median(corners, axis=0)
+    distance = np.linalg.norm(img.astype(np.float32) - background_color, axis=2)
+    background_mask = (distance < BACKGROUND_TOLERANCE).astype(np.uint8) * 255
 
-# ---------------- LOAD IMAGE ----------------
+    kernel = np.ones((3, 3), np.uint8)
+    background_mask = cv2.morphologyEx(background_mask, cv2.MORPH_OPEN, kernel)
+    foreground_mask = cv2.bitwise_not(background_mask)
 
-img = cv2.imread(str(output_path), cv2.IMREAD_UNCHANGED)
+    rgba = cv2.cvtColor(img, cv2.COLOR_BGR2BGRA)
+    rgba[:, :, 3] = foreground_mask
+    cv2.imwrite(str(output_path), rgba)
 
-if img is None:
-    raise FileNotFoundError(output_path)
 
-if img.shape[2] != 4:
-    raise ValueError("Expected an RGBA image.")
+def _remove_background(image_path, output_path):
+    if remove is not None:
+        _remove_background_with_rembg(image_path, output_path)
+        return
 
-alpha = img[:, :, 3]
+    print("rembg is not installed; using corner-color background removal fallback.")
+    _remove_background_with_corner_color(image_path, output_path)
 
-# ---------------- CREATE MASK ----------------
 
-mask = (alpha > 5).astype(np.uint8)
+def _trim_transparent_pixels(sprite):
+    alpha = sprite[:, :, 3]
+    points = cv2.findNonZero((alpha > ALPHA_THRESHOLD).astype(np.uint8))
+    if points is None:
+        return sprite
 
-# ---------------- FIND COMPONENTS ----------------
+    x, y, w, h = cv2.boundingRect(points)
+    return sprite[y : y + h, x : x + w]
 
-num_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(
-    mask,
-    connectivity=8
-)
 
-sprites = []
+def _find_sprite_bounds(img):
+    alpha = img[:, :, 3]
+    mask = (alpha > ALPHA_THRESHOLD).astype(np.uint8)
+    num_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(
+        mask,
+        connectivity=8,
+    )
 
-for i in range(1, num_labels):
+    sprites = []
+    for i in range(1, num_labels):
+        x = stats[i, cv2.CC_STAT_LEFT]
+        y = stats[i, cv2.CC_STAT_TOP]
+        w = stats[i, cv2.CC_STAT_WIDTH]
+        h = stats[i, cv2.CC_STAT_HEIGHT]
+        area = stats[i, cv2.CC_STAT_AREA]
 
-    x = stats[i, cv2.CC_STAT_LEFT]
-    y = stats[i, cv2.CC_STAT_TOP]
-    w = stats[i, cv2.CC_STAT_WIDTH]
-    h = stats[i, cv2.CC_STAT_HEIGHT]
-    area = stats[i, cv2.CC_STAT_AREA]
+        if area < MIN_SPRITE_AREA:
+            continue
 
-    # ignorar ruido
-    if area < 500:
-        continue
+        sprites.append((x, y, w, h))
 
-    sprites.append((x, y, w, h))
+    return sorted(sprites, key=lambda bounds: (bounds[1], bounds[0]))
 
-# Orden izquierda->derecha
-sprites.sort(key=lambda s: s[0])
 
-print(f"Detected {len(sprites)} sprites")
+def _clear_old_frames(out_dir):
+    out_dir.mkdir(parents=True, exist_ok=True)
+    for old_frame in out_dir.glob("frame_*.png"):
+        old_frame.unlink()
 
-# ---------------- SAVE ----------------
 
-for i, (x, y, w, h) in enumerate(sprites):
+def generate_sprite_sheet(name, image_path, out_dir):
+    if not image_path.exists():
+        raise FileNotFoundError(f"Sprite sheet not found: {image_path}")
 
-    sprite = img[y:y+h, x:x+w]
+    out_dir.mkdir(parents=True, exist_ok=True)
+    no_bg_path = out_dir / f"{name}_no_bg.png"
 
-    filename = out_dir / f"frame_{i:02d}.png"
+    print(f"Removing background: {image_path}")
+    _remove_background(image_path, no_bg_path)
 
-    cv2.imwrite(str(filename), sprite)
+    img = cv2.imread(str(no_bg_path), cv2.IMREAD_UNCHANGED)
+    if img is None:
+        raise FileNotFoundError(no_bg_path)
+    if len(img.shape) != 3 or img.shape[2] != 4:
+        raise ValueError(f"Expected an RGBA image after background removal: {no_bg_path}")
 
-    print(f"Saved {filename}")
+    sprite_bounds = _find_sprite_bounds(img)
+    _clear_old_frames(out_dir)
 
-print("Finished.")
+    print(f"Detected {len(sprite_bounds)} {name} sprites")
+    for i, (x, y, w, h) in enumerate(sprite_bounds):
+        sprite = _trim_transparent_pixels(img[y : y + h, x : x + w])
+        filename = out_dir / f"frame_{i:02d}.png"
+        cv2.imwrite(str(filename), sprite)
+        print(f"Saved {filename}")
+
+    return sprite_bounds
+
+
+def generate_sprites(sprite_sheets=None):
+    sprite_sheets = sprite_sheets or SPRITE_SHEETS
+    generated = {}
+
+    for name, image_path in sprite_sheets.items():
+        out_dir = OUTPUT_ROOT / name
+        generated[name] = generate_sprite_sheet(name, image_path, out_dir)
+
+    print("Finished.")
+    return generated
+
+
+if __name__ == "__main__":
+    generate_sprites()
