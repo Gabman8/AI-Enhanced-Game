@@ -7,12 +7,12 @@ from screens.game import Game
 pygame.init()
 WIDTH, HEIGHT = 2048, 1200
 SCREEN = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Independent AI World")
+pygame.display.set_caption("Comando")
 
 MAP_DATA = generate_map("coast-landscape", (100, 100), ["trees", "rocks"], ["goblin", "troll"])
 CHARACTERS_DATA = generate_characters(pygame)
 FPS = 144
-DEFAULT_BACKGROUND = "backgrounds/London_background.png"
+DEFAULT_BACKGROUND = "backgrounds/TimesSquare_background.png"
 
 running = True
 state = "Menu"

@@ -4,7 +4,7 @@ from levels.generate_characters import get_main_character
 
 
 GAME_ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_BACKGROUND = GAME_ROOT / "backgrounds" / "London_background.png"
+DEFAULT_BACKGROUND = GAME_ROOT / "backgrounds" / "TimesSquare_backgdround.png"
 
 
 class Game:
@@ -19,11 +19,11 @@ class Game:
         self._prepared_background = None
         self.delta_time = delta_time
         self.direction = direction
-        self.move_speed = 420
-        self.run_speed = 760
+        self.move_speed = 520
+        self.run_speed = 860
         self.vertical_velocity = 0
         self.gravity = 1400
-        self.ground_y = self.screen.get_height() - 400
+        self.ground_y = self.screen.get_height() - 550
         if self.main_character is not None:
             self.main_character.y = self.ground_y
 
@@ -58,7 +58,6 @@ class Game:
     def handle_event(self, event):
         if event is None or self.main_character is None:
             return
-
         if event.type == self.game.KEYDOWN:
             if event.key == self.game.K_SPACE:
                 if not self.main_character.jumping and self.main_character.y >= self.ground_y - 1:

@@ -9,7 +9,7 @@ except ModuleNotFoundError:
     remove = None
 
 
-CHARACTER = "main_character"
+CHARACTER = "regular_enemy"
 MIN_SPRITE_AREA = 500
 ALPHA_THRESHOLD = 5
 BACKGROUND_TOLERANCE = 38
@@ -20,55 +20,35 @@ RAW_DIR = GAME_ROOT / "characters_images_raw"
 OUTPUT_ROOT = GAME_ROOT / "images" / CHARACTER
 
 SPRITE_SHEETS = {
-    "running": RAW_DIR / "Main_running.png",
-    "attack": RAW_DIR / "Main_Attack.png",
+    "running": RAW_DIR / "regular_enemy_running.png",
+    "attack": RAW_DIR / "regular_enemy_Attack.png",
+    "death": RAW_DIR / "regular_enemy_death.png"
 }
 
 
-def _remove_background_with_rembg(image_path, output_path):
-    with open(image_path, "rb") as image_file:
-        output = remove(image_file.read())
-
-    with open(output_path, "wb") as image_file:
-        image_file.write(output)
-
-
-def _remove_background_with_corner_color(image_path, output_path):
-    img = cv2.imread(str(image_path), cv2.IMREAD_COLOR)
+def _remove_background(image_path, output_path):
+    img = cv2.imread(str(image_path), cv2.IMREAD_UNCHANGED)
     if img is None:
         raise FileNotFoundError(image_path)
 
-    h, w = img.shape[:2]
-    corner_size = max(12, min(w, h) // 20)
-    corners = np.concatenate(
-        [
-            img[:corner_size, :corner_size].reshape(-1, 3),
-            img[:corner_size, -corner_size:].reshape(-1, 3),
-            img[-corner_size:, :corner_size].reshape(-1, 3),
-            img[-corner_size:, -corner_size:].reshape(-1, 3),
-        ]
-    )
-    background_color = np.median(corners, axis=0)
-    distance = np.linalg.norm(img.astype(np.float32) - background_color, axis=2)
-    background_mask = (distance < BACKGROUND_TOLERANCE).astype(np.uint8) * 255
+    if len(img.shape) == 2:
+        img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGRA)
+    elif len(img.shape) == 3 and img.shape[2] == 3:
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2BGRA)
 
-    kernel = np.ones((3, 3), np.uint8)
-    background_mask = cv2.morphologyEx(background_mask, cv2.MORPH_OPEN, kernel)
-    foreground_mask = cv2.bitwise_not(background_mask)
+    # Detectar fondo blanco con tolerancia, evitando dejar un hilo blanco alrededor del sprite
+    lower = np.array([255 - BACKGROUND_TOLERANCE] * 3, dtype=np.uint8)
+    upper = np.array([255, 255, 255], dtype=np.uint8)
+    mask = cv2.inRange(img[:, :, :3], lower, upper)
 
-    rgba = cv2.cvtColor(img, cv2.COLOR_BGR2BGRA)
-    rgba[:, :, 3] = foreground_mask
-    cv2.imwrite(str(output_path), rgba)
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
+    mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
+    mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
 
+    # Fondo transparente
+    img[:, :, 3] = 255 - mask
 
-def _remove_background(image_path, output_path):
-    if remove is not None:
-        _remove_background_with_rembg(image_path, output_path)
-        return
-
-    print("rembg is not installed; using corner-color background removal fallback.")
-    _remove_background_with_corner_color(image_path, output_path)
-
+    cv2.imwrite(str(output_path), img)
 
 def _trim_transparent_pixels(sprite):
     alpha = sprite[:, :, 3]

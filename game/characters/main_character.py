@@ -4,7 +4,7 @@ class MainCharacter(Character):
     def __init__(self):
 
         super().__init__(
-            name="Arthur",
+            name="Arnie",
             type="main_character",
             abilities=["attack","talk"],
             personality="brave",

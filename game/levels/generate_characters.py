@@ -2,20 +2,27 @@ from pathlib import Path
 
 from characters.main_character import MainCharacter
 from characters.regular_enemy import RegularEnemy
-from scripts.generate_sprites import generate_sprites
+from scripts.generate_sprites import SPRITE_SHEETS, generate_sprites
 
 
 NUMBER_OF_ENEMIES = 100
 CHARACTERS = []
 GAME_ROOT = Path(__file__).resolve().parent.parent
 MAIN_CHARACTER_IMAGE_DIR = GAME_ROOT / "images" / "main_character"
-SPRITE_SCALE = 1.2
+SPRITE_SCALE = 1.0
+SPRITE_SIZE = None
 
 
-def _scale_surface(pygame, surface, scale=SPRITE_SCALE):
-    width = int(surface.get_width() * scale)
-    height = int(surface.get_height() * scale)
-    return pygame.transform.scale(surface, (width, height))
+def _scale_surface(pygame, surface, size=SPRITE_SIZE):
+    if size is None:
+        return surface
+    return pygame.transform.smoothscale(surface, size)
+
+
+def _normalize_frame_size(pygame, surface, target_size):
+    if surface.get_size() == target_size:
+        return surface
+    return pygame.transform.smoothscale(surface, target_size)
 
 
 def _load_frames(pygame, folder):
@@ -25,7 +32,7 @@ def _load_frames(pygame, folder):
     frames = []
     for image_path in sorted(folder.glob("frame_*.png")):
         frame = pygame.image.load(str(image_path)).convert_alpha()
-        frames.append(_scale_surface(pygame, frame))
+        frames.append(_scale_surface(pygame, frame, size=SPRITE_SIZE))
     return frames
 
 
@@ -35,14 +42,24 @@ def _make_fallback_surface(pygame, size, color):
     return surface
 
 
-def _ensure_main_character_frames():
-    running_dir = MAIN_CHARACTER_IMAGE_DIR / "running"
-    attack_dir = MAIN_CHARACTER_IMAGE_DIR / "attack"
-    has_running = any(running_dir.glob("frame_*.png")) if running_dir.exists() else False
-    has_attack = any(attack_dir.glob("frame_*.png")) if attack_dir.exists() else False
+def _has_stale_frames(source_image, output_dir):
+    if not source_image.exists() or not output_dir.exists():
+        return True
 
-    if not has_running or not has_attack:
-        generate_sprites()
+    frame_files = sorted(output_dir.glob("frame_*.png"))
+    if not frame_files:
+        return True
+
+    latest_frame_time = max(frame.stat().st_mtime for frame in frame_files)
+    return source_image.stat().st_mtime > latest_frame_time
+
+
+def _ensure_main_character_frames():
+    for sprite_name, source_image in SPRITE_SHEETS.items():
+        output_dir = MAIN_CHARACTER_IMAGE_DIR / sprite_name
+        if _has_stale_frames(source_image, output_dir):
+            generate_sprites()
+            return
 
 
 def generate_characters(pygame, characters=None):
@@ -66,7 +83,6 @@ def generate_characters(pygame, characters=None):
     global CHARACTERS
     CHARACTERS = characters
     return CHARACTERS
-
 
 def get_main_character():
     global CHARACTERS

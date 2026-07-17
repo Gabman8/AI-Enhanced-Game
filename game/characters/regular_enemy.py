@@ -15,6 +15,6 @@ class RegularEnemy(Character):
         self.type = "regular_enemy"
         self.health = 50
         self.strength = 20
-        self.standing_image = standing_image if standing_image else "characters/images/viking.png"
+        self.standing_image = standing_image if standing_image else []
         self.running_images = running_images if running_images else []
         self.attacking_images = attacking_images if attacking_images else []
