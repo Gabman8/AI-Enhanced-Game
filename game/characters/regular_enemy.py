@@ -2,19 +2,16 @@
 from characters.character import Character
 
 class RegularEnemy(Character):
-    def __init__(self, name, abilities, personality, type, health, strength, 
-                 standing_image=None, running_images=None, attacking_images=None):
+    def __init__(self):   
+        super().__init__(
+            name = "Regular Enemy",
+            abilities = ["attack"],
+            personality = "hostile",
+            type = "regular_enemy",
+            health = 50,
+            strength = 20,
+            standing_image = [],
+            running_images =  [],
+            attacking_images =  []
+        )
         
-        super().__init__(name, abilities, personality, type, health, 
-                         strength, standing_image,
-                         running_images=running_images,
-                         attacking_images=attacking_images)
-        self.name = "Regular Enemy"
-        self.abilities = ["attack"]
-        self.personality = "hostile"
-        self.type = "regular_enemy"
-        self.health = 50
-        self.strength = 20
-        self.standing_image = standing_image if standing_image else []
-        self.running_images = running_images if running_images else []
-        self.attacking_images = attacking_images if attacking_images else []

@@ -1,11 +1,10 @@
 
-def generate_map(terrain_type, size, obstacles, enemies):
+def generate_map(name, duration, dificulty):
     # Placeholder for map generation logic
-    map_image = "backgrounds/TimesSquare_background.png"
+    map_image = f"backgrounds/{name}"
     map_data = {
         "image": map_image,
-        "size": size,
-        "obstacles": obstacles,
-        "enemies": enemies
+        "duration": duration,
+        "dificulty": dificulty
     }
     return map_data 

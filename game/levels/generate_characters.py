@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from characters.main_character import MainCharacter
-from characters.regular_enemy import RegularEnemy
+from characters.character import Character
 from scripts.generate_sprites import SPRITE_SHEETS, generate_sprites
 
 
@@ -9,6 +9,7 @@ NUMBER_OF_ENEMIES = 100
 CHARACTERS = []
 GAME_ROOT = Path(__file__).resolve().parent.parent
 MAIN_CHARACTER_IMAGE_DIR = GAME_ROOT / "images" / "main_character"
+REGULAR_ENEMY_IMAGE_DIR = GAME_ROOT / "images" / "regular_enemy"
 SPRITE_SCALE = 1.0
 SPRITE_SIZE = None
 
@@ -58,7 +59,6 @@ def _ensure_main_character_frames():
     for sprite_name, source_image in SPRITE_SHEETS.items():
         output_dir = MAIN_CHARACTER_IMAGE_DIR / sprite_name
         if _has_stale_frames(source_image, output_dir):
-            generate_sprites()
             return
 
 
@@ -76,8 +76,10 @@ def generate_characters(pygame, characters=None):
 
     characters = [main_character]
     for _ in range(NUMBER_OF_ENEMIES):
-        enemy = RegularEnemy("Goblin", ["attack"], "hostile", "regular_enemy", 50, 20)
-        enemy.standing_image = _make_fallback_surface(pygame, (70, 120), (120, 30, 30, 255))
+        enemy = Character("regular",["attack"], "hostile", "regular_enemy", 30, 30)
+        enemy.running_images = _load_frames(pygame, REGULAR_ENEMY_IMAGE_DIR / "running")
+        enemy.attacking_images = _load_frames(pygame, REGULAR_ENEMY_IMAGE_DIR / "attack")
+        enemy.death_images = _load_frames(pygame, REGULAR_ENEMY_IMAGE_DIR / "death")
         characters.append(enemy)
 
     global CHARACTERS
@@ -91,3 +93,12 @@ def get_main_character():
             if character.type == "main_character":
                 return character
     return None
+def get_enemies():
+    global CHARACTERS
+    enemies = []
+    if CHARACTERS:
+        for character in CHARACTERS:
+            if character.type != "main_character":
+                enemies.append(character)
+    return enemies
+

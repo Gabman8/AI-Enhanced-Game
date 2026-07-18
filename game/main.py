@@ -1,6 +1,6 @@
 import pygame
 from levels.generate_map import generate_map
-from levels.generate_characters import generate_characters
+from levels.generate_characters import generate_characters,get_enemies
 from screens.main_menu import MainMenu
 from screens.game import Game
 
@@ -9,14 +9,16 @@ WIDTH, HEIGHT = 2048, 1200
 SCREEN = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Comando")
 
-MAP_DATA = generate_map("coast-landscape", (100, 100), ["trees", "rocks"], ["goblin", "troll"])
+MAP_DATA = generate_map("TimesSquare_background.png", 360, "Low")
 CHARACTERS_DATA = generate_characters(pygame)
+ENEMIES = get_enemies()
 FPS = 144
 DEFAULT_BACKGROUND = "backgrounds/TimesSquare_background.png"
 
 running = True
 state = "Menu"
 clock = pygame.time.Clock()
+background_image = MAP_DATA.get("image") or DEFAULT_BACKGROUND
 main_menu = MainMenu(
     pygame,
     running,
@@ -24,14 +26,14 @@ main_menu = MainMenu(
     "Red",
     30,
     "Courier",
+    background_image
 )
-background_image = MAP_DATA.get("image") or DEFAULT_BACKGROUND
 direction = "Static"
 game = Game(
     pygame,
     running,
     SCREEN,
-    CHARACTERS_DATA,
+    ENEMIES,
     background_image,
     0.5,
     direction,

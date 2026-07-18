@@ -13,6 +13,7 @@ class MainCharacter(Character):
             standing_image=None,
             running_images=[],
             attacking_images=[],
+            death_images=[],
             x=0,
             y=0,
             speed=0,
