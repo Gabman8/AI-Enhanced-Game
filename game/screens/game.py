@@ -8,7 +8,8 @@ DEFAULT_BACKGROUND = GAME_ROOT / "backgrounds" / "TimesSquare_backgdround.png"
 
 class Game:
 
-    ATTACK_DISTANCE = 90
+    ATTACK_DISTANCE = 60
+    PUNCHING_DAMAGE = 30
 
     def __init__(
             self,
@@ -86,6 +87,7 @@ class Game:
 
         if isinstance(background, (str, Path)):
             background_path = self._resolve_asset_path(background)
+
 
             if not background_path.exists():
                 background_path = DEFAULT_BACKGROUND
@@ -244,7 +246,12 @@ class Game:
     def _update_enemies(self):
 
         for enemy in self.enemies:
-
+            distance = abs(
+                        enemy.x - self.main_character.x
+                    )
+            if distance <= self.ATTACK_DISTANCE and self.main_character.attacking:
+                enemy.receive_damage(self.PUNCHING_DAMAGE)
+       
             action = self._decide_enemy_action(enemy)
 
             self._execute_enemy_action(enemy, action)
