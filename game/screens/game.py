@@ -7,10 +7,7 @@ DEFAULT_BACKGROUND = GAME_ROOT / "backgrounds" / "TimesSquare_backgdround.png"
 
 
 class Game:
-
-    ATTACK_DISTANCE = 60
-    PUNCHING_DAMAGE = 30
-
+    ATTACK_DISTANCE = 200
     def __init__(
             self,
             game,
@@ -21,14 +18,14 @@ class Game:
             delta_time,
             direction
     ):
-
+        
         self.game = game
         self.running_game = running
         self.screen = screen
 
         self.main_character = get_main_character()
         self.enemies = enemies
-
+        self.level_completed = False
         self.background_image = background_image or str(DEFAULT_BACKGROUND)
 
         self._prepared_background_source = None
@@ -155,24 +152,17 @@ class Game:
 
         if moving_right and not moving_left:
 
-            self.main_character.move_left(speed * self.delta_time)
+            self.main_character.move_right(self.delta_time)
             self.main_character.facing_right = True
             self.main_character.set_running(True)
 
         elif moving_left and not moving_right:
 
-            self.main_character.move_left(speed * self.delta_time)
+            self.main_character.move_left(self.delta_time)
             self.main_character.facing_right = False
             self.main_character.set_running(True)
-
-        if self.main_character.attacking:
-            self.main_character.set_animation("attack")
-
-        elif self.main_character.running:
-            self.main_character.set_animation("running")
-
         else:
-            self.main_character.set_animation("idle")
+            self.main_character.stop()
 
     def _update_jump(self):
 
@@ -218,23 +208,21 @@ class Game:
 
         if action == "MOVE_RIGHT":
 
-            enemy.move_left(
-                enemy.speed * self.delta_time
+            enemy.move_right(
+                self.delta_time
             )
 
             enemy.facing_right = True
             enemy.set_running(True)
-            enemy.set_animation("running")
 
         elif action == "MOVE_LEFT":
 
             enemy.move_left(
-                enemy.speed * self.delta_time
+                self.delta_time
             )
 
             enemy.facing_right = False
             enemy.set_running(True)
-            enemy.set_animation("running")
 
         elif action == "ATTACK":
 
@@ -250,7 +238,7 @@ class Game:
                         enemy.x - self.main_character.x
                     )
             if distance <= self.ATTACK_DISTANCE and self.main_character.attacking:
-                enemy.receive_damage(self.PUNCHING_DAMAGE)
+                enemy.receive_damage(self.main_character.punching_damage)
        
             action = self._decide_enemy_action(enemy)
 
@@ -290,12 +278,13 @@ class Game:
 
         if delta_time is not None:
             self.delta_time = delta_time
-
+        
         background = self._prepare_background(
             self.background_image
         )
-
         self.screen.blit(background, (0, 0))
+        if all(enemy.dead for enemy in self.enemies):
+            self.level_completed = True
 
         keys = self.game.key.get_pressed()
 

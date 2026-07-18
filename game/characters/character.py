@@ -8,6 +8,7 @@ class Character:
             type,
             health,
             strength,
+            emotion=None,
             standing_image=None,
             running_images=None,
             attacking_images=None,
@@ -24,19 +25,23 @@ class Character:
         self.type = type
         self.abilities = abilities
         self.personality = personality
+        self.emotion = emotion
 
         # Estadísticas
         self.health = health
         self.max_health = health
         self.strength = strength
+        self.punching_damage = strength * 0.3
 
         # Posición
         self.x = x
         self.y = y
         self.speed = speed
+        self.vertical_velocity = 0
 
         # Estados
         self.running = running
+        self.falling = False
         self.jumping = jumping
         self.attacking = False
         self.dead = False
@@ -140,10 +145,23 @@ class Character:
 
     def die(self):
 
+        if self.dead:
+            return
         self.dead = True
         self.running = False
         self.attacking = False
+        self.falling = True
+        self.vertical_velocity = 0
         self.set_animation("death")
+
+    def update_physics(self, delta_time, ground_y):
+        if self.falling:
+            self.vertical_velocity += 1400 * delta_time
+            self.y += self.vertical_velocity * delta_time
+
+            if self.y >= ground_y:
+                self.y = ground_y
+                self.falling = False
 
     #########################################################
     # IA (solo ejecuta acciones)

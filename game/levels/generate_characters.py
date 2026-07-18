@@ -1,11 +1,9 @@
 from pathlib import Path
-
-from characters.main_character import MainCharacter
 from characters.character import Character
-from scripts.generate_sprites import SPRITE_SHEETS, generate_sprites
+from scripts.generate_sprites import SPRITE_SHEETS
 
 
-NUMBER_OF_ENEMIES = 100
+NUMBER_OF_ENEMIES = 3
 CHARACTERS = []
 GAME_ROOT = Path(__file__).resolve().parent.parent
 MAIN_CHARACTER_IMAGE_DIR = GAME_ROOT / "images" / "main_character"
@@ -65,7 +63,7 @@ def _ensure_main_character_frames():
 def generate_characters(pygame, characters=None):
     _ensure_main_character_frames()
 
-    main_character = MainCharacter()
+    main_character = Character("GigaChad",["attack","talk"], "brave", "main_character", 100, 100)
     main_character.running_images = _load_frames(pygame, MAIN_CHARACTER_IMAGE_DIR / "running")
     main_character.attacking_images = _load_frames(pygame, MAIN_CHARACTER_IMAGE_DIR / "attack")
 
@@ -76,7 +74,7 @@ def generate_characters(pygame, characters=None):
 
     characters = [main_character]
     for _ in range(NUMBER_OF_ENEMIES):
-        enemy = Character("regular",["attack"], "hostile", "regular_enemy", 30, 30)
+        enemy = Character("regular",["attack"], "hostile", "regular_enemy", 20, 20)
         enemy.running_images = _load_frames(pygame, REGULAR_ENEMY_IMAGE_DIR / "running")
         enemy.attacking_images = _load_frames(pygame, REGULAR_ENEMY_IMAGE_DIR / "attack")
         enemy.death_images = _load_frames(pygame, REGULAR_ENEMY_IMAGE_DIR / "death")
