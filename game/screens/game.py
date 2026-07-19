@@ -1,7 +1,7 @@
 from pathlib import Path
+import pandas as pd
 import pygame
 from levels.generate_characters import get_main_character
-
 GAME_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_BACKGROUND = GAME_ROOT / "backgrounds" / "TimesSquare_backgdround.png"
 
@@ -16,98 +16,38 @@ class Game:
             enemies,
             background_image,
             delta_time,
-            direction
+            direction,
+            decision_manager
     ):
         
         self.game = game
         self.running_game = running
         self.screen = screen
-
+        self.decision_manager = decision_manager
         self.main_character = get_main_character()
         self.enemies = enemies
         self.level_completed = False
         self.background_image = background_image or str(DEFAULT_BACKGROUND)
-
         self._prepared_background_source = None
-        self._prepared_background = None
-
+        self._prepared_background = None 
         self.delta_time = delta_time
         self.direction = direction
-
-        self.move_speed = 520
-        self.run_speed = 860
-
-        self.vertical_velocity = 0
+        self.move_speed = 420
+        self.run_speed = 760
+        self.jump_velocity = 700
         self.gravity = 1400
-
-        self.ground_y = self.screen.get_height() - 550
-
-        if self.main_character:
+        self.ground_y = self.screen.get_height() - 400
+        if self.main_character is not None:
             self.main_character.y = self.ground_y
 
-        # Posición inicial de enemigos
-        x = 900
-
-        for enemy in self.enemies:
-            enemy.x = x
-            enemy.y = self.ground_y
-            x += 250
-
-    ##################################################
-    # BACKGROUND
-    ##################################################
-
-    def _resolve_asset_path(self, path):
-
-        path = Path(path)
-
-        if path.is_absolute():
-            return path
-
-        game_relative = GAME_ROOT / path
-
-        if game_relative.exists():
-            return game_relative
-
-        return Path.cwd() / path
-
     def _prepare_background(self, background):
-
         if background is None:
-            background = DEFAULT_BACKGROUND
-
-        if (
-                background == self._prepared_background_source
-                and self._prepared_background is not None
-        ):
-            return self._prepared_background
-
-        if isinstance(background, (str, Path)):
-            background_path = self._resolve_asset_path(background)
-
-
-            if not background_path.exists():
-                background_path = DEFAULT_BACKGROUND
-
-            background = self.game.image.load(
-                str(background_path)
-            ).convert()
-
-        self._prepared_background_source = background
-
-        self._prepared_background = pygame.transform.scale(
-            background,
-            self.screen.get_size()
-        )
-
-        return self._prepared_background
-
-    ##################################################
-    # INPUT
-    ##################################################
+            return None
+        if isinstance(background, str):
+            background = self.game.image.load(background).convert()
+        return pygame.transform.scale(background, self.screen.get_size())
 
     def handle_event(self, event):
-
         if event is None:
             return
 
@@ -191,11 +131,24 @@ class Game:
         """
         ESTE MÉTODO SERÁ SUSTITUIDO POR EL MODELO IA.
         """
-
         distance = abs(
             enemy.x - self.main_character.x
         )
+        features = pd.DataFrame([{
+            "enemy_type": enemy.type,
+            "enemy_level": enemy.strength,
+            "enemy_state": enemy.animation_state,
+            "enemy_direction": int(enemy.facing_right),
+            "enemy_speed": enemy.speed,
+            "player_distance": distance,
+            "player_health": self.main_character.health,
+            "player_running": self.main_character.running,
+            "player_attacking": self.main_character.attacking,
+        }])
 
+        decision = self.decision_manager.model.predict(features)
+        print(f"decision {decision}")
+        
         if distance <= self.ATTACK_DISTANCE:
             return "ATTACK"
 
@@ -275,33 +228,49 @@ class Game:
     ##################################################
 
     def create_game(self, event, delta_time=None):
-
         if delta_time is not None:
             self.delta_time = delta_time
-        
-        background = self._prepare_background(
-            self.background_image
-        )
-        self.screen.blit(background, (0, 0))
-        if all(enemy.dead for enemy in self.enemies):
-            self.level_completed = True
 
-        keys = self.game.key.get_pressed()
+        pygame_module = self.game
+        main_character_image = self.main_character.standing_image
+        background = self._prepare_background(self.background_image)
+        keys = pygame_module.key.get_pressed()
 
-        self._update_main_character_state(keys)
-        self._update_jump()
+        if background is not None:
+            self.screen.blit(background, (0, 0))
+        else:
+            self.screen.fill((200, 200, 100))
 
-        self.main_character.update_animation(
-            self.delta_time
-        )
+        self.handle_event(event)
 
-        self._update_enemies()
+        if keys[pygame_module.K_d] and keys[pygame_module.K_LSHIFT]:
+            self.direction = "running_right"
+        elif keys[pygame_module.K_d]:
+            self.direction = "moving_right"
+        elif keys[pygame_module.K_a] and keys[pygame_module.K_LSHIFT]:
+            self.direction = "running_left"
+        elif keys[pygame_module.K_a]:
+            self.direction = "moving_left"
+        else:
+            self.direction = "idle"
 
-        self._draw_character(self.main_character)
+        if self.direction == "moving_right":
+            self.main_character.increase_x(self.move_speed * self.delta_time)
+        elif self.direction == "moving_left":
+            self.main_character.decrease_x(self.move_speed * self.delta_time)
+        elif self.direction == "running_right":
+            self.main_character.increase_x(self.run_speed * self.delta_time)
+        elif self.direction == "running_left":
+            self.main_character.decrease_x(self.run_speed * self.delta_time)
 
-        for enemy in self.enemies:
-            self._draw_character(enemy)
+        if self.main_character.jumping:
+            self.main_character.y += self.jump_velocity * self.delta_time
+            self.jump_velocity += self.gravity * self.delta_time
+            if self.main_character.y >= self.ground_y:
+                self.main_character.y = self.ground_y
+                self.main_character.set_jumping(False)
+                self.jump_velocity = 0
 
-        self.game.display.flip()
-
+        self.screen.blit(main_character_image, (self.main_character.x, self.main_character.y))
+        pygame_module.display.flip()
         return self.running_game
