@@ -8,6 +8,9 @@ class Character:
             type,
             health,
             strength,
+            anger,
+            fear,
+            confidence,
             emotion=None,
             standing_image=None,
             running_images=None,
@@ -26,7 +29,16 @@ class Character:
         self.abilities = abilities
         self.personality = personality
         self.emotion = emotion
+        self.last_action = None
+        self.anger = anger
+        self.fear = fear
+        self.times_hit = 0
+        self.times_attack = 0
+        self.confidence = confidence
 
+        self.current_action = "IDLE"
+        self.decision_timer = 0
+        self.decision_interval = 1.5
         # Estadísticas
         self.health = health
         self.max_health = health
@@ -128,7 +140,7 @@ class Character:
 
         if self.attacking:
             return
-
+        self.times_attack += 1
         self.attacking = True
         self.set_animation("attack")
 
@@ -136,6 +148,7 @@ class Character:
 
         if self.dead:
             return
+        self.times_hit += 1
 
         self.health -= damage
 
@@ -162,27 +175,6 @@ class Character:
             if self.y >= ground_y:
                 self.y = ground_y
                 self.falling = False
-
-    #########################################################
-    # IA (solo ejecuta acciones)
-    #########################################################
-
-    def perform_action(self, action, delta_time):
-
-        if action == "MOVE_LEFT":
-            self.move_left(delta_time)
-
-        elif action == "MOVE_RIGHT":
-            self.move_right(delta_time)
-
-        elif action == "ATTACK":
-            self.attack()
-
-        elif action == "IDLE":
-            self.stop()
-
-        elif action == "DIE":
-            self.die()
 
     #########################################################
     # ANIMACIONES

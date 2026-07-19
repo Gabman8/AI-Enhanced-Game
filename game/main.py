@@ -2,7 +2,7 @@ import pygame
 from levels.generate_level import generate_level
 from screens.main_menu import MainMenu
 from screens.game import Game
-from ai_manager import AIManager
+from AI.ai_manager import AIManager
 
 pygame.init()
 WIDTH, HEIGHT = 2048, 1200
@@ -10,7 +10,7 @@ SCREEN = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Comando")
 
 FPS = 144
-DEFAULT_BACKGROUND = "backgrounds/TimesSquare_background.png"
+DEFAULT_BACKGROUND = "game/backgrounds/TimesSquare_background.png"
 LEVEL = generate_level(pygame)
 
 running = True

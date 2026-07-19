@@ -39,13 +39,62 @@ class Game:
         self.ground_y = self.screen.get_height() - 400
         if self.main_character is not None:
             self.main_character.y = self.ground_y
+            # Posición inicial de enemigos
+        x = 900
+
+        for enemy in self.enemies:
+            enemy.x = x
+            enemy.y = self.ground_y
+            x += 250
+
+    ##################################################
+    # BACKGROUND
+    ##################################################
+    def _resolve_asset_path(self, path):
+        path = Path(path)
+        if path.is_absolute():
+            return path
+        game_relative = GAME_ROOT / path
+
+        if game_relative.exists():
+            return game_relative
+
+        return Path.cwd() / path
 
     def _prepare_background(self, background):
+
         if background is None:
-            return None
-        if isinstance(background, str):
-            background = self.game.image.load(background).convert()
-        return pygame.transform.scale(background, self.screen.get_size())
+            background = DEFAULT_BACKGROUND
+
+        if (
+                background == self._prepared_background_source
+                and self._prepared_background is not None
+        ):
+            return self._prepared_background
+
+        if isinstance(background, (str, Path)):
+            background_path = self._resolve_asset_path(background)
+
+
+            if not background_path.exists():
+                background_path = DEFAULT_BACKGROUND
+
+            background = self.game.image.load(
+                str(background_path)
+            ).convert()
+
+        self._prepared_background_source = background
+
+        self._prepared_background = pygame.transform.scale(
+            background,
+            self.screen.get_size()
+        )
+
+        return self._prepared_background
+
+    ##################################################
+    # INPUT
+    ##################################################
 
     def handle_event(self, event):
         if event is None:
@@ -128,34 +177,43 @@ class Game:
     ##################################################
 
     def _decide_enemy_action(self, enemy):
-        """
-        ESTE MÉTODO SERÁ SUSTITUIDO POR EL MODELO IA.
-        """
-        distance = abs(
-            enemy.x - self.main_character.x
-        )
+    
+        distance = enemy.distance_to(self.main_character)
         features = pd.DataFrame([{
             "enemy_type": enemy.type,
-            "enemy_level": enemy.strength,
-            "enemy_state": enemy.animation_state,
-            "enemy_direction": int(enemy.facing_right),
+            "enemy_personality": enemy.personality,
+            "enemy_emotion": enemy.emotion,
+            "enemy_health": enemy.health,
+            "enemy_strength": enemy.strength,
             "enemy_speed": enemy.speed,
-            "player_distance": distance,
+            "enemy_running": enemy.running,
+            "enemy_jumping": enemy.jumping,
+            "enemy_attacking": enemy.attacking,
+            "enemy_dead": enemy.dead,
+            "enemy_facing_right": enemy.facing_right,
+            "enemy_animation_state": enemy.animation_state,
+            "enemy_anger": enemy.anger,
+            "enemy_fear": enemy.fear,
+            "enemy_confidence": enemy.confidence,
+            "enemy_last_action": enemy.last_action,
+            "enemy_times_hit": enemy.times_hit,
+            "enemy_times_attack": enemy.times_attack,
             "player_health": self.main_character.health,
+            "player_strength": self.main_character.strength,
             "player_running": self.main_character.running,
+            "player_jumping": self.main_character.jumping,
             "player_attacking": self.main_character.attacking,
+            "player_dead": self.main_character.dead,
+            "player_facing_right": self.main_character.facing_right,
+            "player_animation_state": self.main_character.animation_state,
+            "distance": distance,
+            "player_is_right": self.main_character.facing_right,
+
         }])
 
-        decision = self.decision_manager.model.predict(features)
+        decision = self.decision_manager.model.predict(features)[0]
         print(f"decision {decision}")
-        
-        if distance <= self.ATTACK_DISTANCE:
-            return "ATTACK"
-
-        if enemy.x < self.main_character.x:
-            return "MOVE_RIGHT"
-
-        return "MOVE_LEFT"
+        return decision
 
     def _execute_enemy_action(self, enemy, action):
 
@@ -167,6 +225,7 @@ class Game:
 
             enemy.facing_right = True
             enemy.set_running(True)
+            enemy.last_action = action
 
         elif action == "MOVE_LEFT":
 
@@ -176,6 +235,7 @@ class Game:
 
             enemy.facing_right = False
             enemy.set_running(True)
+            enemy.last_action = action
 
         elif action == "ATTACK":
 
@@ -183,6 +243,7 @@ class Game:
 
             if not enemy.attacking:
                 enemy.attack()
+            enemy.last_action = action
 
     def _update_enemies(self):
 
@@ -192,11 +253,18 @@ class Game:
                     )
             if distance <= self.ATTACK_DISTANCE and self.main_character.attacking:
                 enemy.receive_damage(self.main_character.punching_damage)
-       
-            action = self._decide_enemy_action(enemy)
+            enemy.decision_timer += self.delta_time
 
-            self._execute_enemy_action(enemy, action)
+            if enemy.decision_timer >= enemy.decision_interval:
 
+                enemy.current_action = self._decide_enemy_action(enemy)
+
+                enemy.decision_timer = 0
+
+            self._execute_enemy_action(
+                enemy,
+                enemy.current_action
+            )
             enemy.update_animation(self.delta_time)
 
     ##################################################
@@ -228,49 +296,28 @@ class Game:
     ##################################################
 
     def create_game(self, event, delta_time=None):
+
         if delta_time is not None:
             self.delta_time = delta_time
+        
+        background = self._prepare_background(
+            self.background_image
+        )
+        self.screen.blit(background, (0, 0))
+        self._draw_character(self.main_character)
+        for enemy in self.enemies:
+            self._draw_character(enemy)
+    
+        keys = self.game.key.get_pressed()
 
-        pygame_module = self.game
-        main_character_image = self.main_character.standing_image
-        background = self._prepare_background(self.background_image)
-        keys = pygame_module.key.get_pressed()
+        self._update_main_character_state(keys)
+        self._update_jump()
 
-        if background is not None:
-            self.screen.blit(background, (0, 0))
-        else:
-            self.screen.fill((200, 200, 100))
-
-        self.handle_event(event)
-
-        if keys[pygame_module.K_d] and keys[pygame_module.K_LSHIFT]:
-            self.direction = "running_right"
-        elif keys[pygame_module.K_d]:
-            self.direction = "moving_right"
-        elif keys[pygame_module.K_a] and keys[pygame_module.K_LSHIFT]:
-            self.direction = "running_left"
-        elif keys[pygame_module.K_a]:
-            self.direction = "moving_left"
-        else:
-            self.direction = "idle"
-
-        if self.direction == "moving_right":
-            self.main_character.increase_x(self.move_speed * self.delta_time)
-        elif self.direction == "moving_left":
-            self.main_character.decrease_x(self.move_speed * self.delta_time)
-        elif self.direction == "running_right":
-            self.main_character.increase_x(self.run_speed * self.delta_time)
-        elif self.direction == "running_left":
-            self.main_character.decrease_x(self.run_speed * self.delta_time)
-
-        if self.main_character.jumping:
-            self.main_character.y += self.jump_velocity * self.delta_time
-            self.jump_velocity += self.gravity * self.delta_time
-            if self.main_character.y >= self.ground_y:
-                self.main_character.y = self.ground_y
-                self.main_character.set_jumping(False)
-                self.jump_velocity = 0
-
-        self.screen.blit(main_character_image, (self.main_character.x, self.main_character.y))
-        pygame_module.display.flip()
+        self.main_character.update_animation(
+            self.delta_time
+        )
+        self._update_enemies()
+        self.game.display.flip()
+        if all(enemy.dead for enemy in self.enemies):
+            self.level_completed = True
         return self.running_game
