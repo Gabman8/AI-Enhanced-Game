@@ -34,7 +34,7 @@ class MainMenu:
         target_screen.blit(quit_surface, quit_rect)
         self.pygame.display.flip()
 
-        if event.type == self.pygame.QUIT:
+        if event is not None and event.type == self.pygame.QUIT:
             self.running_game = False
             return
 
