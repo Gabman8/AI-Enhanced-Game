@@ -251,16 +251,19 @@ class Game:
             distance = abs(
                         enemy.x - self.main_character.x
                     )
+            
             if distance <= self.ATTACK_DISTANCE and self.main_character.attacking:
                 enemy.receive_damage(self.main_character.punching_damage)
+                enemy.decide_action = True
             enemy.decision_timer += self.delta_time
 
             if enemy.decision_timer >= enemy.decision_interval:
-
-                enemy.current_action = self._decide_enemy_action(enemy)
-
+                enemy.decide_action = True
                 enemy.decision_timer = 0
-
+                
+            if enemy.decide_action:
+                enemy.current_action = self._decide_enemy_action(enemy)
+                enemy.decide_action = False
             self._execute_enemy_action(
                 enemy,
                 enemy.current_action

@@ -35,6 +35,7 @@ class Character:
         self.times_hit = 0
         self.times_attack = 0
         self.confidence = confidence
+        self.decide_action = False
 
         self.current_action = "IDLE"
         self.decision_timer = 0
