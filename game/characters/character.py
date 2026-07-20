@@ -19,6 +19,8 @@ class Character:
             x=0,
             y=0,
             speed=220,
+            regular_speed=220,
+            sprinting_speed = 450,
             running=False,
             jumping=False
     ):
@@ -44,12 +46,14 @@ class Character:
         self.health = health
         self.max_health = health
         self.strength = strength
-        self.punching_damage = strength * 0.3
+        self.punching_damage = strength * 0.2
 
         # Posición
         self.x = x
         self.y = y
         self.speed = speed
+        self.regular_speed = regular_speed
+        self.sprinting_speed = sprinting_speed
         self.vertical_velocity = 0
 
         # Estados
@@ -146,7 +150,6 @@ class Character:
         self.set_animation("attack")
 
     def receive_damage(self, damage):
-
         if self.dead:
             return
         self.times_hit += 1
@@ -167,7 +170,7 @@ class Character:
         self.falling = True
         self.vertical_velocity = 0
         self.set_animation("death")
-
+        
     def update_physics(self, delta_time, ground_y):
         if self.falling:
             self.vertical_velocity += 1400 * delta_time

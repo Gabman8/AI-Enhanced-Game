@@ -10,7 +10,7 @@ SCREEN = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Comando")
 
 FPS = 144
-DEFAULT_BACKGROUND = "game/backgrounds/TimesSquare_background.png"
+DEFAULT_BACKGROUND = "backgrounds/TimesSquare_background.png"
 LEVEL = generate_level(pygame)
 
 running = True

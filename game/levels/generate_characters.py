@@ -74,7 +74,7 @@ def generate_characters(pygame, characters=None):
 
     characters = [main_character]
     for _ in range(NUMBER_OF_ENEMIES):
-        enemy = Character("regular",["attack"], "hostile", "regular_enemy", 20, 20, 0.5, 0.2, 0.5)
+        enemy = Character("regular",["attack"], "hostile", "regular_enemy", 60, 20, 0.5, 0.2, 0.5)
         enemy.running_images = _load_frames(pygame, REGULAR_ENEMY_IMAGE_DIR / "running")
         enemy.attacking_images = _load_frames(pygame, REGULAR_ENEMY_IMAGE_DIR / "attack")
         enemy.death_images = _load_frames(pygame, REGULAR_ENEMY_IMAGE_DIR / "death")

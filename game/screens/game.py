@@ -27,13 +27,11 @@ class Game:
         self.main_character = get_main_character()
         self.enemies = enemies
         self.level_completed = False
-        self.background_image = background_image or str(DEFAULT_BACKGROUND)
+        self.background_image = background_image
         self._prepared_background_source = None
         self._prepared_background = None 
         self.delta_time = delta_time
         self.direction = direction
-        self.move_speed = 420
-        self.run_speed = 760
         self.jump_velocity = 700
         self.gravity = 1400
         self.ground_y = self.screen.get_height() - 400
@@ -63,9 +61,6 @@ class Game:
 
     def _prepare_background(self, background):
 
-        if background is None:
-            background = DEFAULT_BACKGROUND
-
         if (
                 background == self._prepared_background_source
                 and self._prepared_background is not None
@@ -74,10 +69,6 @@ class Game:
 
         if isinstance(background, (str, Path)):
             background_path = self._resolve_asset_path(background)
-
-
-            if not background_path.exists():
-                background_path = DEFAULT_BACKGROUND
 
             background = self.game.image.load(
                 str(background_path)
@@ -135,18 +126,22 @@ class Game:
                 or keys[self.game.K_RSHIFT]
         )
 
-        speed = self.run_speed if wants_run else self.move_speed
-
         self.main_character.set_running(False)
 
         if moving_right and not moving_left:
-
+            if wants_run:
+                self.main_character.set_speed(self.main_character.sprinting_speed)
+            else:
+                self.main_character.set_speed(self.main_character.regular_speed)
             self.main_character.move_right(self.delta_time)
             self.main_character.facing_right = True
             self.main_character.set_running(True)
 
         elif moving_left and not moving_right:
-
+            if wants_run:
+                self.main_character.set_speed(self.main_character.sprinting_speed)
+            else:
+                self.main_character.set_speed(self.main_character.regular_speed)
             self.main_character.move_left(self.delta_time)
             self.main_character.facing_right = False
             self.main_character.set_running(True)
@@ -176,10 +171,10 @@ class Game:
     # ENEMIES
     ##################################################
 
-    def _decide_enemy_action(self, enemy):
+    def _predict_enemy_action(self, enemy):
     
         distance = enemy.distance_to(self.main_character)
-        features = pd.DataFrame([{
+        features = {
             "enemy_type": enemy.type,
             "enemy_personality": enemy.personality,
             "enemy_emotion": enemy.emotion,
@@ -208,11 +203,12 @@ class Game:
             "player_animation_state": self.main_character.animation_state,
             "distance": distance,
             "player_is_right": self.main_character.facing_right,
+        }
 
-        }])
-
-        decision = self.decision_manager.model.predict(features)[0]
-        print(f"decision {decision}")
+        prediction = self.decision_manager.model.predict(features)
+        decision = prediction.decision
+        emotion = prediction.emotion
+        print(f"emotion {emotion}")
         return decision
 
     def _execute_enemy_action(self, enemy, action):
@@ -251,7 +247,6 @@ class Game:
             distance = abs(
                         enemy.x - self.main_character.x
                     )
-            
             if distance <= self.ATTACK_DISTANCE and self.main_character.attacking:
                 enemy.receive_damage(self.main_character.punching_damage)
                 enemy.decide_action = True
@@ -259,10 +254,9 @@ class Game:
 
             if enemy.decision_timer >= enemy.decision_interval:
                 enemy.decide_action = True
-                enemy.decision_timer = 0
-                
+                enemy.decision_timer = 0   
             if enemy.decide_action:
-                enemy.current_action = self._decide_enemy_action(enemy)
+                enemy.current_action = self._predict_enemy_action(enemy)
                 enemy.decide_action = False
             self._execute_enemy_action(
                 enemy,
