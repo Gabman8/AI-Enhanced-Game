@@ -1,7 +1,7 @@
 from pathlib import Path
+import pandas as pd
 import pygame
 from levels.generate_characters import get_main_character
-
 GAME_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_BACKGROUND = GAME_ROOT / "backgrounds" / "TimesSquare_backgdround.png"
 
@@ -16,36 +16,28 @@ class Game:
             enemies,
             background_image,
             delta_time,
-            direction
+            direction,
+            decision_manager
     ):
         
         self.game = game
         self.running_game = running
         self.screen = screen
-
+        self.decision_manager = decision_manager
         self.main_character = get_main_character()
         self.enemies = enemies
         self.level_completed = False
-        self.background_image = background_image or str(DEFAULT_BACKGROUND)
-
+        self.background_image = background_image
         self._prepared_background_source = None
-        self._prepared_background = None
-
+        self._prepared_background = None 
         self.delta_time = delta_time
         self.direction = direction
-
-        self.move_speed = 520
-        self.run_speed = 860
-
-        self.vertical_velocity = 0
+        self.jump_velocity = 700
         self.gravity = 1400
-
-        self.ground_y = self.screen.get_height() - 550
-
-        if self.main_character:
+        self.ground_y = self.screen.get_height() - 400
+        if self.main_character is not None:
             self.main_character.y = self.ground_y
-
-        # Posición inicial de enemigos
+            # Posición inicial de enemigos
         x = 900
 
         for enemy in self.enemies:
@@ -56,14 +48,10 @@ class Game:
     ##################################################
     # BACKGROUND
     ##################################################
-
     def _resolve_asset_path(self, path):
-
         path = Path(path)
-
         if path.is_absolute():
             return path
-
         game_relative = GAME_ROOT / path
 
         if game_relative.exists():
@@ -73,9 +61,6 @@ class Game:
 
     def _prepare_background(self, background):
 
-        if background is None:
-            background = DEFAULT_BACKGROUND
-
         if (
                 background == self._prepared_background_source
                 and self._prepared_background is not None
@@ -84,10 +69,6 @@ class Game:
 
         if isinstance(background, (str, Path)):
             background_path = self._resolve_asset_path(background)
-
-
-            if not background_path.exists():
-                background_path = DEFAULT_BACKGROUND
 
             background = self.game.image.load(
                 str(background_path)
@@ -107,7 +88,6 @@ class Game:
     ##################################################
 
     def handle_event(self, event):
-
         if event is None:
             return
 
@@ -146,18 +126,22 @@ class Game:
                 or keys[self.game.K_RSHIFT]
         )
 
-        speed = self.run_speed if wants_run else self.move_speed
-
         self.main_character.set_running(False)
 
         if moving_right and not moving_left:
-
+            if wants_run:
+                self.main_character.set_speed(self.main_character.sprinting_speed)
+            else:
+                self.main_character.set_speed(self.main_character.regular_speed)
             self.main_character.move_right(self.delta_time)
             self.main_character.facing_right = True
             self.main_character.set_running(True)
 
         elif moving_left and not moving_right:
-
+            if wants_run:
+                self.main_character.set_speed(self.main_character.sprinting_speed)
+            else:
+                self.main_character.set_speed(self.main_character.regular_speed)
             self.main_character.move_left(self.delta_time)
             self.main_character.facing_right = False
             self.main_character.set_running(True)
@@ -187,22 +171,45 @@ class Game:
     # ENEMIES
     ##################################################
 
-    def _decide_enemy_action(self, enemy):
-        """
-        ESTE MÉTODO SERÁ SUSTITUIDO POR EL MODELO IA.
-        """
+    def _predict_enemy_action(self, enemy):
+    
+        distance = enemy.distance_to(self.main_character)
+        features = {
+            "enemy_type": enemy.type,
+            "enemy_personality": enemy.personality,
+            "enemy_emotion": enemy.emotion,
+            "enemy_health": enemy.health,
+            "enemy_strength": enemy.strength,
+            "enemy_speed": enemy.speed,
+            "enemy_running": enemy.running,
+            "enemy_jumping": enemy.jumping,
+            "enemy_attacking": enemy.attacking,
+            "enemy_dead": enemy.dead,
+            "enemy_facing_right": enemy.facing_right,
+            "enemy_animation_state": enemy.animation_state,
+            "enemy_anger": enemy.anger,
+            "enemy_fear": enemy.fear,
+            "enemy_confidence": enemy.confidence,
+            "enemy_last_action": enemy.last_action,
+            "enemy_times_hit": enemy.times_hit,
+            "enemy_times_attack": enemy.times_attack,
+            "player_health": self.main_character.health,
+            "player_strength": self.main_character.strength,
+            "player_running": self.main_character.running,
+            "player_jumping": self.main_character.jumping,
+            "player_attacking": self.main_character.attacking,
+            "player_dead": self.main_character.dead,
+            "player_facing_right": self.main_character.facing_right,
+            "player_animation_state": self.main_character.animation_state,
+            "distance": distance,
+            "player_is_right": self.main_character.facing_right,
+        }
 
-        distance = abs(
-            enemy.x - self.main_character.x
-        )
-
-        if distance <= self.ATTACK_DISTANCE:
-            return "ATTACK"
-
-        if enemy.x < self.main_character.x:
-            return "MOVE_RIGHT"
-
-        return "MOVE_LEFT"
+        prediction = self.decision_manager.model.predict(features)
+        decision = prediction.decision
+        emotion = prediction.emotion
+        print(f"emotion {emotion}")
+        return decision
 
     def _execute_enemy_action(self, enemy, action):
 
@@ -214,6 +221,7 @@ class Game:
 
             enemy.facing_right = True
             enemy.set_running(True)
+            enemy.last_action = action
 
         elif action == "MOVE_LEFT":
 
@@ -223,6 +231,7 @@ class Game:
 
             enemy.facing_right = False
             enemy.set_running(True)
+            enemy.last_action = action
 
         elif action == "ATTACK":
 
@@ -230,6 +239,7 @@ class Game:
 
             if not enemy.attacking:
                 enemy.attack()
+            enemy.last_action = action
 
     def _update_enemies(self):
 
@@ -239,11 +249,19 @@ class Game:
                     )
             if distance <= self.ATTACK_DISTANCE and self.main_character.attacking:
                 enemy.receive_damage(self.main_character.punching_damage)
-       
-            action = self._decide_enemy_action(enemy)
+                enemy.decide_action = True
+            enemy.decision_timer += self.delta_time
 
-            self._execute_enemy_action(enemy, action)
-
+            if enemy.decision_timer >= enemy.decision_interval:
+                enemy.decide_action = True
+                enemy.decision_timer = 0   
+            if enemy.decide_action:
+                enemy.current_action = self._predict_enemy_action(enemy)
+                enemy.decide_action = False
+            self._execute_enemy_action(
+                enemy,
+                enemy.current_action
+            )
             enemy.update_animation(self.delta_time)
 
     ##################################################
@@ -283,9 +301,10 @@ class Game:
             self.background_image
         )
         self.screen.blit(background, (0, 0))
-        if all(enemy.dead for enemy in self.enemies):
-            self.level_completed = True
-
+        self._draw_character(self.main_character)
+        for enemy in self.enemies:
+            self._draw_character(enemy)
+    
         keys = self.game.key.get_pressed()
 
         self._update_main_character_state(keys)
@@ -294,14 +313,8 @@ class Game:
         self.main_character.update_animation(
             self.delta_time
         )
-
         self._update_enemies()
-
-        self._draw_character(self.main_character)
-
-        for enemy in self.enemies:
-            self._draw_character(enemy)
-
         self.game.display.flip()
-
+        if all(enemy.dead for enemy in self.enemies):
+            self.level_completed = True
         return self.running_game

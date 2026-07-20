@@ -8,6 +8,9 @@ class Character:
             type,
             health,
             strength,
+            anger,
+            fear,
+            confidence,
             emotion=None,
             standing_image=None,
             running_images=None,
@@ -16,6 +19,8 @@ class Character:
             x=0,
             y=0,
             speed=220,
+            regular_speed=220,
+            sprinting_speed = 450,
             running=False,
             jumping=False
     ):
@@ -26,17 +31,29 @@ class Character:
         self.abilities = abilities
         self.personality = personality
         self.emotion = emotion
+        self.last_action = None
+        self.anger = anger
+        self.fear = fear
+        self.times_hit = 0
+        self.times_attack = 0
+        self.confidence = confidence
+        self.decide_action = False
 
+        self.current_action = "IDLE"
+        self.decision_timer = 0
+        self.decision_interval = 1.5
         # Estadísticas
         self.health = health
         self.max_health = health
         self.strength = strength
-        self.punching_damage = strength * 0.3
+        self.punching_damage = strength * 0.2
 
         # Posición
         self.x = x
         self.y = y
         self.speed = speed
+        self.regular_speed = regular_speed
+        self.sprinting_speed = sprinting_speed
         self.vertical_velocity = 0
 
         # Estados
@@ -128,14 +145,14 @@ class Character:
 
         if self.attacking:
             return
-
+        self.times_attack += 1
         self.attacking = True
         self.set_animation("attack")
 
     def receive_damage(self, damage):
-
         if self.dead:
             return
+        self.times_hit += 1
 
         self.health -= damage
 
@@ -153,7 +170,7 @@ class Character:
         self.falling = True
         self.vertical_velocity = 0
         self.set_animation("death")
-
+        
     def update_physics(self, delta_time, ground_y):
         if self.falling:
             self.vertical_velocity += 1400 * delta_time
@@ -162,27 +179,6 @@ class Character:
             if self.y >= ground_y:
                 self.y = ground_y
                 self.falling = False
-
-    #########################################################
-    # IA (solo ejecuta acciones)
-    #########################################################
-
-    def perform_action(self, action, delta_time):
-
-        if action == "MOVE_LEFT":
-            self.move_left(delta_time)
-
-        elif action == "MOVE_RIGHT":
-            self.move_right(delta_time)
-
-        elif action == "ATTACK":
-            self.attack()
-
-        elif action == "IDLE":
-            self.stop()
-
-        elif action == "DIE":
-            self.die()
 
     #########################################################
     # ANIMACIONES

@@ -2,6 +2,7 @@ import pygame
 from levels.generate_level import generate_level
 from screens.main_menu import MainMenu
 from screens.game import Game
+from AI.ai_manager import AIManager
 
 pygame.init()
 WIDTH, HEIGHT = 2048, 1200
@@ -15,7 +16,7 @@ LEVEL = generate_level(pygame)
 running = True
 state = "Menu"
 clock = pygame.time.Clock()
-background_image = LEVEL.get("enemies").get("image") or DEFAULT_BACKGROUND
+background_image = LEVEL["map_data"]["image"] or DEFAULT_BACKGROUND
 main_menu = MainMenu(
     pygame,
     running,
@@ -26,14 +27,16 @@ main_menu = MainMenu(
     background_image
 )
 direction = "Static"
+decision_manager = AIManager("enemies.pkl")
 game = Game(
     pygame,
     running,
     SCREEN,
-    LEVEL.get("enemies"),
+    LEVEL["enemies"],
     background_image,
     0.5,
     direction,
+    decision_manager
 )
 while running:
     delta_time = clock.tick(FPS) / 1000.0
@@ -57,6 +60,14 @@ while running:
          if game.level_completed:
              state = "Menu"
 pygame.quit()
+
+""" 
+IDEA TO GENERATE NEW LEVEL AFTER FINISHING ONE
+if game.level_completed:
+                    game.level_completed = False
+                    level = generate_level(pygame)
+                    game.background_image = level["map_data"]["image"] or DEFAULT_BACKGROUND
+                    game.enemies = level["enemies"]"""
 
 
 
