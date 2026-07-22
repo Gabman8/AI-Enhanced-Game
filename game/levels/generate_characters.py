@@ -1,14 +1,21 @@
 from pathlib import Path
 from characters.character import Character
 from scripts.generate_sprites import SPRITE_SHEETS
+import random
 
 
-NUMBER_OF_ENEMIES = 3
+NUMBER_OF_ENEMIES = 10
 CHARACTERS = []
 GAME_ROOT = Path(__file__).resolve().parent.parent
-MAIN_CHARACTER_IMAGE_DIR = GAME_ROOT / "images" / "main_character"
-REGULAR_ENEMY_IMAGE_DIR = GAME_ROOT / "images" / "regular_enemy"
-SPRITE_SCALE = 1.0
+MAIN_CHARACTER = "main_character"
+REGULAR_ENEMY = "regular_enemy"
+STRONG_ENEMY =  "strong_enemy"
+FINAL_BOSS = "final_boss"
+MAIN_CHARACTER_IMAGE_DIR = GAME_ROOT / "images" / MAIN_CHARACTER
+REGULAR_ENEMY_IMAGE_DIR = GAME_ROOT / "images" / REGULAR_ENEMY
+STRONG_ENEMY_IMAGE_DIR = GAME_ROOT / "images" / STRONG_ENEMY
+
+SPRITE_SCALE = 1
 SPRITE_SIZE = None
 
 
@@ -74,16 +81,34 @@ def generate_characters(pygame, characters=None):
 
     characters = [main_character]
     for _ in range(NUMBER_OF_ENEMIES):
-        enemy = Character("regular",["attack"], "hostile", "regular_enemy", 60, 20, 0.5, 0.2, 0.5)
-        enemy.running_images = _load_frames(pygame, REGULAR_ENEMY_IMAGE_DIR / "running")
-        enemy.attacking_images = _load_frames(pygame, REGULAR_ENEMY_IMAGE_DIR / "attack")
-        enemy.death_images = _load_frames(pygame, REGULAR_ENEMY_IMAGE_DIR / "death")
+        result = generate_enemy_type()
+        type= result["type"]
+        image_dir = result["image_dir"]
+        enemy = Character("regular",["attack"], "hostile", type, 60, 20, 0.5, 0.2, 0.5)
+        enemy.running_images = _load_frames(pygame, image_dir / "running")
+        enemy.attacking_images = _load_frames(pygame, image_dir / "attack")
+        enemy.death_images = _load_frames(pygame, image_dir / "death")
         characters.append(enemy)
 
     global CHARACTERS
     CHARACTERS = characters
     return CHARACTERS
 
+def generate_enemy_type():
+    #35 percent probability to have a strong enemy
+    strong_enemy_prob = 50
+    number = random.randint(1,100)
+    if number <= strong_enemy_prob:
+        return {
+            "type": STRONG_ENEMY,
+            "image_dir": STRONG_ENEMY_IMAGE_DIR
+        }
+    else:
+        return {
+            "type": REGULAR_ENEMY,
+            "image_dir": REGULAR_ENEMY_IMAGE_DIR
+        }
+    
 def get_main_character():
     global CHARACTERS
     if CHARACTERS:
