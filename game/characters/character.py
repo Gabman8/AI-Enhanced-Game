@@ -73,6 +73,7 @@ class Character:
         #Dialogo
         self.current_line = None
         self.line_timer = 0
+        self.show_dialogue = False
 
         self.animation_fps = {
             "idle": 1,
@@ -270,14 +271,34 @@ class Character:
                 len(frames) - 1
             )
         ]
-
+    #########################################################
+    # EMOTIONS
+    #########################################################
+    def calculate_emotions(self):
+        if self.emotion == "calm":
+            self.anger = self.anger if self.decrement_emotion(self.anger,0.2) <= 0 else self.decrement_emotion(self.anger,0.2)
+            self.confidence =self.confidence if self.increment_emotion(self.confidence,0.2) >= 1 else self.increment_emotion(self.confidence,0.2)
+            self.fear -= self.fear if self.decrement_emotion(self.fear,0.2) <= 0 else self.decrement_emotion(self.fear,0.2)
+        elif self.emotion == "confident":
+            self.anger -= 0.2
+            self.confidence += 0.3
+            self.fear -= 0.2
+        elif self.emotion == "angry":
+            self.anger -= 0.3
+            self.confidence += 0.1
+            self.fear -= 0.2
     #########################################################
     # UTILS
     #########################################################
 
     def distance_to(self, character):
         return abs(self.x - character.x)
-
+    def increment_emotion(emotion, quantity):
+        emotion += quantity
+        return emotion
+    def decrement_emotion(emotion, quantity):
+        emotion -= quantity
+        return emotion
     #########################################################
     # SETTERS
     #########################################################

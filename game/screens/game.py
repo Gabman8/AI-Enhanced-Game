@@ -7,15 +7,14 @@ from AI.LLM.dialoge_generator import DialogueContext
 
 GAME_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_BACKGROUND = GAME_ROOT / "backgrounds" / "TimesSquare_backgdround.png"
+DIALOGUE_BOX =  GAME_ROOT / "images" / "utils" / "dialog_box.png"
 
 class Game:
     ATTACK_DISTANCE = 200
-
-    # CAMBIO: parámetros de aparición de enemigos
-    SPAWN_INTERVAL = 5.0             # segundos "base" entre apariciones
-    SPAWN_INTERVAL_VARIANCE = 0.6    # +/- aleatoriedad sobre ese intervalo
-    SPAWN_OFFSCREEN_MARGIN = 150     # px fuera del borde derecho donde aparecen
-    SCREEN_ENTRY_MARGIN = 150        # cuánto tienen que adentrarse para "estar dentro"
+    SPAWN_INTERVAL = 5.0            
+    SPAWN_INTERVAL_VARIANCE = 0.6    
+    SPAWN_OFFSCREEN_MARGIN = 150     
+    SCREEN_ENTRY_MARGIN = 150        
 
     def __init__(
             self,
@@ -37,7 +36,7 @@ class Game:
         self.dialogue_generator_async = dialogue_generator_async
         self.main_character = get_main_character()
         self.enemies = enemies
-        self.level_completed = False
+        self.level_over = False
         self.background_image = background_image
         self._prepared_background_source = None
         self._prepared_background = None
@@ -49,11 +48,6 @@ class Game:
         self.auto_mode = False
         if self.main_character is not None:
             self.main_character.y = self.ground_y
-
-        # CAMBIO: en vez de colocar a todos los enemigos ya visibles en
-        # fila, se preparan en una cola y se van soltando uno a uno con
-        # _update_spawns(). Hasta que les toca, no se dibujan ni participan
-        # en la IA/combate (ver evaluate_action y create_game).
         self._spawn_queue = list(self.enemies)
         self._spawn_timer = self._roll_spawn_delay()
 
@@ -186,10 +180,10 @@ class Game:
     # PLAYER
     ##################################################
     def _update_main_character_state(self, keys):
-        self._poll_dialogue(self.main_character)
         if self.auto_mode:
             self.evaluate_action()
         else:
+            self._poll_dialogue(self.main_character)
             moving_left = keys[self.game.K_a]
             moving_right = keys[self.game.K_d]
 
@@ -248,7 +242,6 @@ class Game:
     ##################################################
 
     def _predict_action(self, character):
-
         distance = character.distance_to(self.main_character)
         features = {
             "enemy_type": character.type,
@@ -283,12 +276,10 @@ class Game:
 
         prediction = self.decision_manager.model.predict(features)
         decision = prediction.decision
-        emotion = prediction.emotion
-        print(f"emotion {emotion}")
+        character.emotion = prediction.emotion
+        character.calculate_emotions()
         return decision
-
     def _generate_dialogue(self, character, category=None):
-
         ctx = DialogueContext(
             enemy_type=character.type,
             personality=character.personality,
@@ -300,14 +291,12 @@ class Game:
         self.dialogue_generator_async.request(character.id, ctx)
 
     def _poll_dialogue(self, character):
-        """Llama esto CADA FRAME para cada enemigo; no bloquea, devuelve
-        None si la frase todavía no está lista."""
         line = self.dialogue_generator_async.poll(character.id)
-        print(line)
         if line:
+            print(line)
             character.current_line = line
             character.line_timer = 3.0
-
+            character.show_dialogue = True
     def _execute_action(self, character, action):
 
         if action == "MOVE_RIGHT":
@@ -409,6 +398,20 @@ class Game:
             image,
             (character.x, character.y)
         )
+    def _draw_dialogue_box(self, character, text):
+
+        image = DIALOGUE_BOX
+        if image is None:
+            return
+        image = self.game.transform.flip(
+                        image,
+                        True,
+                        False
+                    )
+        self.screen.blit(
+            image,
+            (character.x + 10, character.y + 50)
+        )
 
     ##################################################
     # GAME LOOP
@@ -425,7 +428,6 @@ class Game:
         self.screen.blit(background, (0, 0))
         self._draw_character(self.main_character)
         for enemy in self.enemies:
-            # CAMBIO: no dibujar enemigos que aún no han aparecido
             if enemy.spawned:
                 self._draw_character(enemy)
 
@@ -440,5 +442,7 @@ class Game:
 
         self.game.display.flip()
         if all(enemy.dead for enemy in self.enemies):
-            self.level_completed = True
+            self.level_over = True
+        if self.main_character.dead:
+            self.level_over = True
         return self.running_game

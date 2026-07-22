@@ -4,7 +4,7 @@ from scripts.generate_sprites import SPRITE_SHEETS
 import random
 
 
-NUMBER_OF_ENEMIES = 20
+NUMBER_OF_ENEMIES = 3
 CHARACTERS = []
 GAME_ROOT = Path(__file__).resolve().parent.parent
 MAIN_CHARACTER = "main_character"
