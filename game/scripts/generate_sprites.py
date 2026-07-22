@@ -9,7 +9,7 @@ except ModuleNotFoundError:
     remove = None
 
 
-CHARACTER = "regular_enemy"
+CHARACTER = "strong_enemy"
 MIN_SPRITE_AREA = 500
 ALPHA_THRESHOLD = 5
 BACKGROUND_TOLERANCE = 38
@@ -20,9 +20,9 @@ RAW_DIR = GAME_ROOT / "characters_images_raw"
 OUTPUT_ROOT = GAME_ROOT / "images" / CHARACTER
 
 SPRITE_SHEETS = {
-    "running": RAW_DIR / "regular_enemy_running.png",
-    "attack": RAW_DIR / "regular_enemy_Attack.png",
-    "death": RAW_DIR / "regular_enemy_death.png"
+    "running": RAW_DIR / f"{CHARACTER}_running.png",
+    "attack": RAW_DIR / f"{CHARACTER}_Attack.png",
+    "death": RAW_DIR / f"{CHARACTER}_death.png"
 }
 
 

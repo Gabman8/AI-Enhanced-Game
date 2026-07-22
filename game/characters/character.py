@@ -1,3 +1,4 @@
+import uuid
 class Character:
 
     def __init__(
@@ -24,7 +25,7 @@ class Character:
             running=False,
             jumping=False
     ):
-
+        self.id = uuid.uuid4()
         # Información
         self.name = name
         self.type = type
@@ -69,6 +70,10 @@ class Character:
         self.animation_frame = 0
         self.animation_timer = 0
 
+        #Dialogo
+        self.current_line = None
+        self.line_timer = 0
+
         self.animation_fps = {
             "idle": 1,
             "running": 12,
@@ -83,7 +88,7 @@ class Character:
         self.death_images = self._as_frame_list(death_images)
 
     #########################################################
-    # IMÁGENES
+    # IMAGES
     #########################################################
 
     def _as_frame_list(self, images):
@@ -97,7 +102,7 @@ class Character:
         return [images]
 
     #########################################################
-    # MOVIMIENTO
+    # MOVEMENT
     #########################################################
 
     def move_left(self, delta_time):
@@ -135,7 +140,7 @@ class Character:
             self.set_animation("idle")
 
     #########################################################
-    # COMBATE
+    # COMBAT
     #########################################################
 
     def attack(self):
@@ -181,7 +186,7 @@ class Character:
                 self.falling = False
 
     #########################################################
-    # ANIMACIONES
+    # ANIMATIONS
     #########################################################
 
     def set_animation(self, state):
@@ -267,7 +272,7 @@ class Character:
         ]
 
     #########################################################
-    # UTILIDADES
+    # UTILS
     #########################################################
 
     def distance_to(self, character):

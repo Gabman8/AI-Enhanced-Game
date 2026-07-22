@@ -1,13 +1,22 @@
+import random
 from pathlib import Path
 import pandas as pd
 import pygame
 from levels.generate_characters import get_main_character
+from AI.LLM.dialoge_generator import DialogueContext
+
 GAME_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_BACKGROUND = GAME_ROOT / "backgrounds" / "TimesSquare_backgdround.png"
 
-
 class Game:
     ATTACK_DISTANCE = 200
+
+    # CAMBIO: parámetros de aparición de enemigos
+    SPAWN_INTERVAL = 5.0             # segundos "base" entre apariciones
+    SPAWN_INTERVAL_VARIANCE = 0.6    # +/- aleatoriedad sobre ese intervalo
+    SPAWN_OFFSCREEN_MARGIN = 150     # px fuera del borde derecho donde aparecen
+    SCREEN_ENTRY_MARGIN = 150        # cuánto tienen que adentrarse para "estar dentro"
+
     def __init__(
             self,
             game,
@@ -17,33 +26,94 @@ class Game:
             background_image,
             delta_time,
             direction,
-            decision_manager
+            decision_manager,
+            dialogue_generator_async
     ):
-        
+
         self.game = game
         self.running_game = running
         self.screen = screen
         self.decision_manager = decision_manager
+        self.dialogue_generator_async = dialogue_generator_async
         self.main_character = get_main_character()
         self.enemies = enemies
         self.level_completed = False
         self.background_image = background_image
         self._prepared_background_source = None
-        self._prepared_background = None 
+        self._prepared_background = None
         self.delta_time = delta_time
         self.direction = direction
         self.jump_velocity = 700
-        self.gravity = 1400
-        self.ground_y = self.screen.get_height() - 400
+        self.gravity = 1000
+        self.ground_y = self.screen.get_height() - 520
+        self.auto_mode = False
         if self.main_character is not None:
             self.main_character.y = self.ground_y
-            # Posición inicial de enemigos
-        x = 900
+
+        # CAMBIO: en vez de colocar a todos los enemigos ya visibles en
+        # fila, se preparan en una cola y se van soltando uno a uno con
+        # _update_spawns(). Hasta que les toca, no se dibujan ni participan
+        # en la IA/combate (ver evaluate_action y create_game).
+        self._spawn_queue = list(self.enemies)
+        self._spawn_timer = self._roll_spawn_delay()
 
         for enemy in self.enemies:
-            enemy.x = x
             enemy.y = self.ground_y
-            x += 250
+            enemy.spawned = False
+            enemy.entered_screen = False
+
+    ##################################################
+    # SPAWN DE ENEMIGOS
+    ##################################################
+
+    def _roll_spawn_delay(self):
+        return self.SPAWN_INTERVAL + random.uniform(
+            -self.SPAWN_INTERVAL_VARIANCE,
+            self.SPAWN_INTERVAL_VARIANCE,
+        )
+
+    def _update_spawns(self):
+        if not self._spawn_queue:
+            return
+
+        self._spawn_timer -= self.delta_time
+        if self._spawn_timer <= 0:
+            enemy = self._spawn_queue.pop(0)
+            self._spawn_enemy(enemy)
+            self._spawn_timer = self._roll_spawn_delay()
+
+    def _spawn_enemy(self, enemy):
+        # Aparece justo fuera del borde derecho de la pantalla/background,
+        # no en mitad de la pantalla.
+        enemy.x = self.screen.get_width() + self.SPAWN_OFFSCREEN_MARGIN
+        enemy.y = self.ground_y
+        enemy.spawned = True
+        enemy.entered_screen = False
+        enemy.facing_right = False
+        enemy.set_running(True)
+
+    def _update_entering_enemy(self, enemy):
+        """Enemigo ya soltado pero todavía corriendo hacia dentro de pantalla.
+        Mientras tanto no participa en la IA ni en el combate."""
+        entry_x = self.screen.get_width() - self.SCREEN_ENTRY_MARGIN
+        enemy.move_left(self.delta_time)
+
+        if enemy.x <= entry_x:
+            enemy.entered_screen = True
+            enemy.decide_action = True  # que la IA tome el control ya mismo
+
+    ##################################################
+    # LÍMITES DE PANTALLA
+    ##################################################
+
+    def _character_width(self, character):
+        image = character.get_current_image()
+        return image.get_width() if image is not None else 100
+
+    def _clamp_to_screen(self, character):
+        min_x = 0
+        max_x = self.screen.get_width() - self._character_width(character)
+        character.x = max(min_x, min(character.x, max_x))
 
     ##################################################
     # BACKGROUND
@@ -115,38 +185,44 @@ class Game:
     ##################################################
     # PLAYER
     ##################################################
-
     def _update_main_character_state(self, keys):
-
-        moving_left = keys[self.game.K_a]
-        moving_right = keys[self.game.K_d]
-
-        wants_run = (
-                keys[self.game.K_LSHIFT]
-                or keys[self.game.K_RSHIFT]
-        )
-
-        self.main_character.set_running(False)
-
-        if moving_right and not moving_left:
-            if wants_run:
-                self.main_character.set_speed(self.main_character.sprinting_speed)
-            else:
-                self.main_character.set_speed(self.main_character.regular_speed)
-            self.main_character.move_right(self.delta_time)
-            self.main_character.facing_right = True
-            self.main_character.set_running(True)
-
-        elif moving_left and not moving_right:
-            if wants_run:
-                self.main_character.set_speed(self.main_character.sprinting_speed)
-            else:
-                self.main_character.set_speed(self.main_character.regular_speed)
-            self.main_character.move_left(self.delta_time)
-            self.main_character.facing_right = False
-            self.main_character.set_running(True)
+        self._poll_dialogue(self.main_character)
+        if self.auto_mode:
+            self.evaluate_action()
         else:
-            self.main_character.stop()
+            moving_left = keys[self.game.K_a]
+            moving_right = keys[self.game.K_d]
+
+            wants_run = (
+                    keys[self.game.K_LSHIFT]
+                    or keys[self.game.K_RSHIFT]
+            )
+            self.main_character.set_running(False)
+            for enemy in self.enemies:
+                if not enemy.spawned:
+                    continue
+                distance = self.main_character.distance_to(enemy)
+                if distance <= self.ATTACK_DISTANCE and enemy.attacking:
+                      self.main_character.receive_damage(enemy.punching_damage)
+            if moving_right and not moving_left:
+                if wants_run:
+                    self.main_character.set_speed(self.main_character.sprinting_speed)
+                else:
+                    self.main_character.set_speed(self.main_character.regular_speed)
+                self.main_character.move_right(self.delta_time)
+                self.main_character.facing_right = True
+                self.main_character.set_running(True)
+
+            elif moving_left and not moving_right:
+                if wants_run:
+                    self.main_character.set_speed(self.main_character.sprinting_speed)
+                else:
+                    self.main_character.set_speed(self.main_character.regular_speed)
+                self.main_character.move_left(self.delta_time)
+                self.main_character.facing_right = False
+                self.main_character.set_running(True)
+            else:
+                self.main_character.stop()
 
     def _update_jump(self):
 
@@ -168,31 +244,31 @@ class Game:
             self.vertical_velocity = 0
 
     ##################################################
-    # ENEMIES
+    # ACTIONS
     ##################################################
 
-    def _predict_enemy_action(self, enemy):
-    
-        distance = enemy.distance_to(self.main_character)
+    def _predict_action(self, character):
+
+        distance = character.distance_to(self.main_character)
         features = {
-            "enemy_type": enemy.type,
-            "enemy_personality": enemy.personality,
-            "enemy_emotion": enemy.emotion,
-            "enemy_health": enemy.health,
-            "enemy_strength": enemy.strength,
-            "enemy_speed": enemy.speed,
-            "enemy_running": enemy.running,
-            "enemy_jumping": enemy.jumping,
-            "enemy_attacking": enemy.attacking,
-            "enemy_dead": enemy.dead,
-            "enemy_facing_right": enemy.facing_right,
-            "enemy_animation_state": enemy.animation_state,
-            "enemy_anger": enemy.anger,
-            "enemy_fear": enemy.fear,
-            "enemy_confidence": enemy.confidence,
-            "enemy_last_action": enemy.last_action,
-            "enemy_times_hit": enemy.times_hit,
-            "enemy_times_attack": enemy.times_attack,
+            "enemy_type": character.type,
+            "enemy_personality": character.personality,
+            "enemy_emotion": character.emotion,
+            "enemy_health": character.health,
+            "enemy_strength": character.strength,
+            "enemy_speed": character.speed,
+            "enemy_running": character.running,
+            "enemy_jumping": character.jumping,
+            "enemy_attacking": character.attacking,
+            "enemy_dead": character.dead,
+            "enemy_facing_right": character.facing_right,
+            "enemy_animation_state": character.animation_state,
+            "enemy_anger": character.anger,
+            "enemy_fear": character.fear,
+            "enemy_confidence": character.confidence,
+            "enemy_last_action": character.last_action,
+            "enemy_times_hit": character.times_hit,
+            "enemy_times_attack": character.times_attack,
             "player_health": self.main_character.health,
             "player_strength": self.main_character.strength,
             "player_running": self.main_character.running,
@@ -211,58 +287,104 @@ class Game:
         print(f"emotion {emotion}")
         return decision
 
-    def _execute_enemy_action(self, enemy, action):
+    def _generate_dialogue(self, character, category=None):
+
+        ctx = DialogueContext(
+            enemy_type=character.type,
+            personality=character.personality,
+            anger=character.anger,
+            fear=character.fear,
+            confidence=character.confidence,
+            category=category,
+        )
+        self.dialogue_generator_async.request(character.id, ctx)
+
+    def _poll_dialogue(self, character):
+        """Llama esto CADA FRAME para cada enemigo; no bloquea, devuelve
+        None si la frase todavía no está lista."""
+        line = self.dialogue_generator_async.poll(character.id)
+        print(line)
+        if line:
+            character.current_line = line
+            character.line_timer = 3.0
+
+    def _execute_action(self, character, action):
 
         if action == "MOVE_RIGHT":
 
-            enemy.move_right(
+            character.move_right(
                 self.delta_time
             )
 
-            enemy.facing_right = True
-            enemy.set_running(True)
-            enemy.last_action = action
+            character.facing_right = True
+            character.set_running(True)
+            character.last_action = action
 
         elif action == "MOVE_LEFT":
 
-            enemy.move_left(
+            character.move_left(
                 self.delta_time
             )
 
-            enemy.facing_right = False
-            enemy.set_running(True)
-            enemy.last_action = action
+            character.facing_right = False
+            character.set_running(True)
+            character.last_action = action
 
         elif action == "ATTACK":
 
-            enemy.set_running(False)
+            character.set_running(False)
 
-            if not enemy.attacking:
-                enemy.attack()
-            enemy.last_action = action
+            if not character.attacking:
+                character.attack()
+            character.last_action = action
 
     def _update_enemies(self):
+        self.evaluate_action(self.main_character)
+
+    def evaluate_action(self, agresor=None):
+        # CAMBIO: primero se procesa la cola de spawn
+        self._update_spawns()
 
         for enemy in self.enemies:
-            distance = abs(
-                        enemy.x - self.main_character.x
-                    )
-            if distance <= self.ATTACK_DISTANCE and self.main_character.attacking:
-                enemy.receive_damage(self.main_character.punching_damage)
-                enemy.decide_action = True
-            enemy.decision_timer += self.delta_time
 
-            if enemy.decision_timer >= enemy.decision_interval:
-                enemy.decide_action = True
-                enemy.decision_timer = 0   
-            if enemy.decide_action:
-                enemy.current_action = self._predict_enemy_action(enemy)
-                enemy.decide_action = False
-            self._execute_enemy_action(
-                enemy,
-                enemy.current_action
+            # CAMBIO: todavía no le toca aparecer -> ni se procesa ni se dibuja
+            if not enemy.spawned:
+                continue
+
+            # CAMBIO: está corriendo hacia dentro de pantalla -> no participa
+            # en IA/combate todavía, solo se mueve en línea recta hacia dentro
+            if not enemy.entered_screen:
+                self._update_entering_enemy(enemy)
+                enemy.update_animation(self.delta_time)
+                continue
+
+            if agresor == self.main_character:
+                 reciever = enemy
+            else:
+                reciever = self.main_character
+            self._poll_dialogue(reciever)
+            distance = enemy.distance_to(agresor)
+            if distance <= self.ATTACK_DISTANCE and agresor.attacking:
+                reciever.receive_damage(agresor.punching_damage)
+                reciever.decide_action = True
+            reciever.decision_timer += self.delta_time
+            if reciever.decision_timer >= enemy.decision_interval:
+                reciever.decide_action = True
+                reciever.decision_timer = 0
+            if reciever.decide_action:
+                self._generate_dialogue(reciever)
+                reciever.current_action = self._predict_action(reciever)
+                reciever.decide_action = False
+            self._execute_action(
+                reciever,
+                reciever.current_action
             )
-            enemy.update_animation(self.delta_time)
+
+            # CAMBIO: una vez dentro, no puede volver a salir de pantalla
+            if reciever is not self.main_character:
+                self._clamp_to_screen(reciever)
+
+            reciever.update_animation(self.delta_time)
 
     ##################################################
     # DRAW
@@ -296,24 +418,26 @@ class Game:
 
         if delta_time is not None:
             self.delta_time = delta_time
-        
+
         background = self._prepare_background(
             self.background_image
         )
         self.screen.blit(background, (0, 0))
         self._draw_character(self.main_character)
         for enemy in self.enemies:
-            self._draw_character(enemy)
-    
-        keys = self.game.key.get_pressed()
+            # CAMBIO: no dibujar enemigos que aún no han aparecido
+            if enemy.spawned:
+                self._draw_character(enemy)
 
+        keys = self.game.key.get_pressed()
+        self._update_enemies()
         self._update_main_character_state(keys)
         self._update_jump()
 
         self.main_character.update_animation(
             self.delta_time
         )
-        self._update_enemies()
+
         self.game.display.flip()
         if all(enemy.dead for enemy in self.enemies):
             self.level_completed = True

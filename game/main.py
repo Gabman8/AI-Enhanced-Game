@@ -3,7 +3,7 @@ from levels.generate_level import generate_level
 from screens.main_menu import MainMenu
 from screens.game import Game
 from AI.ai_manager import AIManager
-
+from AI.LLM.dialoge_generator import AsyncDialogueLLM,LocalDialogueLLM,DialogueContext
 pygame.init()
 WIDTH, HEIGHT = 2048, 1200
 SCREEN = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -28,6 +28,12 @@ main_menu = MainMenu(
 )
 direction = "Static"
 decision_manager = AIManager("enemies.pkl")
+dialogue_generator= LocalDialogueLLM(
+    model_path=r"C:\Users\Gabriel\Documents\Coding\AI-World-Game\game\AI\models\qwen2.5-1.5b-instruct-q4_k_m.gguf"
+)
+
+dialogue_generator_async = AsyncDialogueLLM(dialogue_generator)
+
 game = Game(
     pygame,
     running,
@@ -36,7 +42,8 @@ game = Game(
     background_image,
     0.5,
     direction,
-    decision_manager
+    decision_manager,
+    dialogue_generator_async
 )
 while running:
     delta_time = clock.tick(FPS) / 1000.0
