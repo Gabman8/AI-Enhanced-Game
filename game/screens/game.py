@@ -4,10 +4,9 @@ import pandas as pd
 import pygame
 from levels.generate_characters import get_main_character
 from AI.LLM.dialoge_generator import DialogueContext
+from screens.dialogue_box import DialogueBox
 
 GAME_ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_BACKGROUND = GAME_ROOT / "backgrounds" / "TimesSquare_backgdround.png"
-DIALOGUE_BOX =  GAME_ROOT / "images" / "utils" / "dialog_box.png"
 
 class Game:
     ATTACK_DISTANCE = 200
@@ -27,8 +26,9 @@ class Game:
             direction,
             decision_manager,
             dialogue_generator_async
-    ):
+    ):  
 
+        self.dialogue_box = DialogueBox()
         self.game = game
         self.running_game = running
         self.screen = screen
@@ -46,6 +46,13 @@ class Game:
         self.gravity = 1000
         self.ground_y = self.screen.get_height() - 520
         self.auto_mode = False
+        #DIALOGUE
+        self._prepared_dialogue_box = None
+        self._dialogue_font = None
+        self._emotion_font = None
+        self._health_font = None
+
+        
         if self.main_character is not None:
             self.main_character.y = self.ground_y
         self._spawn_queue = list(self.enemies)
@@ -97,7 +104,7 @@ class Game:
             enemy.decide_action = True  # que la IA tome el control ya mismo
 
     ##################################################
-    # LÍMITES DE PANTALLA
+    # SCREEN LIMITS
     ##################################################
 
     def _character_width(self, character):
@@ -176,6 +183,22 @@ class Game:
         ):
             self.main_character.attack()
 
+        
+    ##################################################
+    # COLLISION
+    ##################################################
+    def _resolve_collision(self, first, second):
+        rect1 = first.get_body_rect()
+        rect2 = second.get_body_rect()
+        if not rect1.colliderect(rect2):
+            return
+        overlap = rect1.clip(rect2)
+        if rect1.centerx < rect2.centerx:
+            first.x -= overlap.width / 2
+            second.x += overlap.width / 2
+        else:
+            first.x += overlap.width / 2
+            second.x -= overlap.width / 2
     ##################################################
     # PLAYER
     ##################################################
@@ -195,9 +218,12 @@ class Game:
             for enemy in self.enemies:
                 if not enemy.spawned:
                     continue
-                distance = self.main_character.distance_to(enemy)
-                if distance <= self.ATTACK_DISTANCE and enemy.attacking:
-                      self.main_character.receive_damage(enemy.punching_damage)
+                if enemy.dead:
+                    continue
+                self._try_hit(
+                    enemy,
+                    self.main_character
+                )
             if moving_right and not moving_left:
                 if wants_run:
                     self.main_character.set_speed(self.main_character.sprinting_speed)
@@ -293,10 +319,9 @@ class Game:
     def _poll_dialogue(self, character):
         line = self.dialogue_generator_async.poll(character.id)
         if line:
-            print(line)
             character.current_line = line
-            character.line_timer = 3.0
             character.show_dialogue = True
+            character.line_timer = 3
     def _execute_action(self, character, action):
 
         if action == "MOVE_RIGHT":
@@ -320,11 +345,13 @@ class Game:
             character.last_action = action
 
         elif action == "ATTACK":
-
+            if not character.attacking:
+                body = character.get_body_rect()
+                player = self.main_character.get_body_rect()
+                if abs(body.centerx - player.centerx) < 90:
+                    character.attack()
             character.set_running(False)
 
-            if not character.attacking:
-                character.attack()
             character.last_action = action
 
     def _update_enemies(self):
@@ -351,11 +378,12 @@ class Game:
                  reciever = enemy
             else:
                 reciever = self.main_character
+                
             self._poll_dialogue(reciever)
-            distance = enemy.distance_to(agresor)
-            if distance <= self.ATTACK_DISTANCE and agresor.attacking:
-                reciever.receive_damage(agresor.punching_damage)
-                reciever.decide_action = True
+            self._try_hit(
+                agresor,
+                reciever
+            )
             reciever.decision_timer += self.delta_time
             if reciever.decision_timer >= enemy.decision_interval:
                 reciever.decide_action = True
@@ -374,10 +402,27 @@ class Game:
                 self._clamp_to_screen(reciever)
 
             reciever.update_animation(self.delta_time)
-
+    def _try_hit(self, attacker, victim):
+        if not attacker.attacking:
+            return
+        if attacker.damage_done:
+            return
+        if attacker.attack_animation_timer < attacker.attack_duration * 0.45:
+            return
+        attack = attacker.get_attack_rect()
+        body = victim.get_body_rect()
+        if attack.colliderect(body):
+            victim.receive_damage(attacker.punching_damage)
+            attacker.damage_done = True
     ##################################################
     # DRAW
     ##################################################
+    def _get_font(self, attr, size, bold=True):
+        font = getattr(self, attr)
+        if font is None:
+            font = self.game.font.SysFont("Courier", size, bold=bold)
+            setattr(self, attr, font)
+        return font
 
     def _draw_character(self, character):
 
@@ -398,51 +443,118 @@ class Game:
             image,
             (character.x, character.y)
         )
-    def _draw_dialogue_box(self, character, text):
 
-        image = DIALOGUE_BOX
-        if image is None:
+    def _health_ratio(self, character):
+        if not character.max_health:
+            return 0
+        return max(0, character.health) / character.max_health
+
+    def _health_color(self, ratio):
+        if ratio > 0.5:
+            return (0, 200, 0)
+        if ratio > 0.25:
+            return (230, 200, 0)
+        return (200, 0, 0)
+
+    def _draw_health_bar(self, x, y, width, height, ratio, border=2):
+        # borde
+        self.game.draw.rect(
+            self.screen, (20, 20, 20),
+            (x - border, y - border, width + border * 2, height + border * 2)
+        )
+        # fondo vacío
+        self.game.draw.rect(self.screen, (90, 0, 0), (x, y, width, height))
+        # relleno según vida
+        fill_width = int(width * ratio)
+        if fill_width > 0:
+            self.game.draw.rect(
+                self.screen, self._health_color(ratio),
+                (x, y, fill_width, height)
+            )
+
+    def _draw_main_character_health_bar(self):
+        width, height = 420, 38
+        margin = 28
+        x = margin
+        y = self.screen.get_height() - margin - height
+
+        ratio = self._health_ratio(self.main_character)
+        self._draw_health_bar(x, y, width, height, ratio, border=3)
+
+        font = self._get_font("_health_font", 20)
+        label = f"{max(0, int(self.main_character.health))} / {int(self.main_character.max_health)}"
+        text_surface = font.render(label, True, (255, 255, 255))
+        text_rect = text_surface.get_rect(center=(x + width // 2, y + height // 2))
+        self.screen.blit(text_surface, text_rect)
+
+    def _draw_enemy_health_bar(self, enemy):
+        width, height = 80, 10
+        x = enemy.x + (self._character_width(enemy) - width) // 2
+        y = enemy.y - 20
+        ratio = self._health_ratio(enemy)
+        self._draw_health_bar(x, y, width, height, ratio, border=1)
+
+    def _draw_emotion(self, character, anchor_y):
+        if not character.show_emotion or not character.emotion:
             return
-        image = self.game.transform.flip(
-                        image,
-                        True,
-                        False
-                    )
-        self.screen.blit(
-            image,
-            (character.x + 10, character.y + 50)
+        font = self._get_font("_emotion_font", 16)
+        surface = font.render(character.emotion.capitalize(), True, (255, 230, 0))
+        center_x = character.x + self._character_width(character) // 2
+        rect = surface.get_rect(midbottom=(center_x, anchor_y))
+        self.screen.blit(surface, rect)
+    def _draw_enemy_overlay(self, enemy):
+        self._draw_enemy_health_bar(enemy)
+        self._draw_emotion(
+            enemy,
+            enemy.y - 24
+        )
+        self.dialogue_box.draw(
+            self.screen,
+            enemy
+        )
+    def _draw_main_character_overlay(self):
+        self._draw_main_character_health_bar()
+        self._draw_emotion(
+            self.main_character,
+            self.main_character.y - 10
+        )
+        self.dialogue_box.draw(
+            self.screen,
+            self.main_character
         )
 
     ##################################################
     # GAME LOOP
     ##################################################
-
     def create_game(self, event, delta_time=None):
 
         if delta_time is not None:
             self.delta_time = delta_time
-
-        background = self._prepare_background(
-            self.background_image
-        )
+        background = self._prepare_background(self.background_image)
         self.screen.blit(background, (0, 0))
-        self._draw_character(self.main_character)
-        for enemy in self.enemies:
-            if enemy.spawned:
-                self._draw_character(enemy)
-
         keys = self.game.key.get_pressed()
-        self._update_enemies()
+
         self._update_main_character_state(keys)
         self._update_jump()
+        self.main_character.update_animation(self.delta_time)
+        self.main_character.update_attack(self.delta_time)
+        self.main_character.update_status_timers(self.delta_time)
 
-        self.main_character.update_animation(
-            self.delta_time
-        )
+        self._clamp_to_screen(self.main_character)
+        self._update_enemies()
+        self._draw_character(self.main_character)
+        self._draw_main_character_overlay()
+        for enemy in self.enemies:
 
+            if not enemy.spawned:
+                continue
+            self._draw_character(enemy)
+            self._draw_enemy_overlay(enemy)
+            enemy.update_attack(self.delta_time)
         self.game.display.flip()
+
         if all(enemy.dead for enemy in self.enemies):
             self.level_over = True
+
         if self.main_character.dead:
             self.level_over = True
-        return self.running_game

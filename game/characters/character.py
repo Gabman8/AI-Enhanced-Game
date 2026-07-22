@@ -1,4 +1,5 @@
 import uuid
+import pygame
 class Character:
 
     def __init__(
@@ -64,6 +65,8 @@ class Character:
         self.attacking = False
         self.dead = False
         self.facing_right = True
+        self.show_emotion = False
+        self.emotion_timer = 0
 
         # Animación
         self.animation_state = "idle"
@@ -74,6 +77,18 @@ class Character:
         self.current_line = None
         self.line_timer = 0
         self.show_dialogue = False
+
+        # COMBATE
+        self.attack_cooldown = 1.0
+        self.attack_timer = 0
+
+        self.attack_duration = 0.35
+        self.attack_animation_timer = 0
+
+        self.damage_done = False
+
+        # COLISIONES
+        self.body_margin = 18
 
         self.animation_fps = {
             "idle": 1,
@@ -101,6 +116,18 @@ class Character:
             return list(images)
 
         return [images]
+    def update_status_timers(self, delta):
+
+        if self.show_dialogue:
+            self.line_timer -= delta
+            if self.line_timer <= 0:
+                self.show_dialogue = False
+                self.current_line = ""
+
+        if self.show_emotion:
+            self.emotion_timer -= delta
+            if self.emotion_timer <= 0:
+                self.show_emotion = False
 
     #########################################################
     # MOVEMENT
@@ -146,14 +173,12 @@ class Character:
 
     def attack(self):
 
-        if self.dead:
+        if self.attack_timer > 0:
             return
-
-        if self.attacking:
-            return
-        self.times_attack += 1
         self.attacking = True
-        self.set_animation("attack")
+        self.attack_timer = self.attack_cooldown
+        self.attack_animation_timer = 0
+        self.damage_done = False
 
     def receive_damage(self, damage):
         if self.dead:
@@ -185,6 +210,15 @@ class Character:
             if self.y >= ground_y:
                 self.y = ground_y
                 self.falling = False
+    def update_attack(self, delta):
+        if self.attack_timer > 0:
+            self.attack_timer -= delta
+        if self.attacking:
+            self.attack_animation_timer += delta
+            if self.attack_animation_timer >= self.attack_duration:
+                self.attacking = False
+                self.attack_animation_timer = 0
+                self.damage_done = False
 
     #########################################################
     # ANIMATIONS
@@ -216,9 +250,7 @@ class Character:
         return []
 
     def update_animation(self, delta_time):
-
         frames = self.get_animation_frames()
-
         if not frames:
             return
 
@@ -226,18 +258,13 @@ class Character:
             self.animation_state,
             10
         )
-
         frame_duration = 1 / fps
-
         self.animation_timer += delta_time
 
         while self.animation_timer >= frame_duration:
-
             self.animation_timer -= frame_duration
             self.animation_frame += 1
-
             # Ataque termina y vuelve a idle
-
             if (
                     self.animation_state == "attack"
                     and self.animation_frame >= len(frames)
@@ -246,9 +273,7 @@ class Character:
                 self.attacking = False
                 self.set_animation("idle")
                 return
-
             # Muerte se queda en el último frame
-
             if self.animation_state == "death":
 
                 if self.animation_frame >= len(frames):
@@ -257,7 +282,6 @@ class Character:
                 return
 
             self.animation_frame %= len(frames)
-
     def get_current_image(self):
 
         frames = self.get_animation_frames()
@@ -275,28 +299,59 @@ class Character:
     # EMOTIONS
     #########################################################
     def calculate_emotions(self):
+        self.show_emotion = True
+        self.emotion_timer = 1.0
         if self.emotion == "calm":
             self.anger = self.anger if self.decrement_emotion(self.anger,0.2) <= 0 else self.decrement_emotion(self.anger,0.2)
             self.confidence =self.confidence if self.increment_emotion(self.confidence,0.2) >= 1 else self.increment_emotion(self.confidence,0.2)
-            self.fear -= self.fear if self.decrement_emotion(self.fear,0.2) <= 0 else self.decrement_emotion(self.fear,0.2)
+            self.fear = self.fear if self.decrement_emotion(self.fear,0.2) <= 0 else self.decrement_emotion(self.fear,0.2)
         elif self.emotion == "confident":
-            self.anger -= 0.2
-            self.confidence += 0.3
-            self.fear -= 0.2
+            self.anger = self.anger if self.decrement_emotion(self.anger,0.2) <= 0 else self.decrement_emotion(self.anger,0.2)
+            self.confidence = self.confidence if self.increment_emotion(self.confidence,0.3) >= 1 else self.increment_emotion(self.confidence,0.3)
+            self.fear = self.fear if self.decrement_emotion(self.fear,0.2) <= 0 else self.decrement_emotion(self.fear,0.2)
         elif self.emotion == "angry":
-            self.anger -= 0.3
-            self.confidence += 0.1
-            self.fear -= 0.2
+            self.anger = self.confidence if self.increment_emotion(self.confidence,0.3) >= 1 else self.increment_emotion(self.confidence,0.3)
+            self.confidence = self.confidence if self.increment_emotion(self.confidence,0.1) >= 1 else self.increment_emotion(self.confidence,0.1)
+            self.fear = self.fear if self.decrement_emotion(self.fear,0.2) <= 0 else self.decrement_emotion(self.fear,0.2)
+
+    #########################################################
+    # HITBOX
+    #########################################################
+    def get_body_rect(self):
+        image = self.get_current_image()
+        return pygame.Rect(
+            self.x + self.body_margin,
+            self.y,
+            image.get_width() - self.body_margin * 2,
+            image.get_height()
+    )
+    def get_attack_rect(self):
+
+        body = self.get_body_rect()
+        attack_width = 60
+        if self.facing_right:
+            return pygame.Rect(
+                body.right,
+                body.y + 25,
+                attack_width,
+                body.height - 50
+            )
+        return pygame.Rect(
+            body.left - attack_width,
+            body.y + 25,
+            attack_width,
+            body.height - 50
+        )
     #########################################################
     # UTILS
     #########################################################
 
     def distance_to(self, character):
         return abs(self.x - character.x)
-    def increment_emotion(emotion, quantity):
+    def increment_emotion(self,emotion, quantity):
         emotion += quantity
         return emotion
-    def decrement_emotion(emotion, quantity):
+    def decrement_emotion(self,emotion, quantity):
         emotion -= quantity
         return emotion
     #########################################################

@@ -4,7 +4,7 @@ from scripts.generate_sprites import SPRITE_SHEETS
 import random
 
 
-NUMBER_OF_ENEMIES = 3
+NUMBER_OF_ENEMIES = 10
 CHARACTERS = []
 GAME_ROOT = Path(__file__).resolve().parent.parent
 MAIN_CHARACTER = "main_character"
@@ -15,7 +15,7 @@ MAIN_CHARACTER_IMAGE_DIR = GAME_ROOT / "images" / MAIN_CHARACTER
 REGULAR_ENEMY_IMAGE_DIR = GAME_ROOT / "images" / REGULAR_ENEMY
 STRONG_ENEMY_IMAGE_DIR = GAME_ROOT / "images" / STRONG_ENEMY
 
-SPRITE_SCALE = 1.0
+SPRITE_SCALE = 1
 SPRITE_SIZE = None
 
 
@@ -96,7 +96,7 @@ def generate_characters(pygame, characters=None):
 
 def generate_enemy_type():
     #35 percent probability to have a strong enemy
-    strong_enemy_prob = 100
+    strong_enemy_prob = 50
     number = random.randint(1,100)
     if number <= strong_enemy_prob:
         return {
