@@ -172,13 +172,15 @@ class Character:
     #########################################################
 
     def attack(self):
-
+        if self.dead:
+            return
         if self.attack_timer > 0:
             return
         self.attacking = True
+        self.running = False
         self.attack_timer = self.attack_cooldown
-        self.attack_animation_timer = 0
         self.damage_done = False
+        self.set_animation("attack")
 
     def receive_damage(self, damage):
         if self.dead:
@@ -212,14 +214,10 @@ class Character:
                 self.falling = False
     def update_attack(self, delta):
         if self.attack_timer > 0:
-            self.attack_timer -= delta
-        if self.attacking:
-            self.attack_animation_timer += delta
-            if self.attack_animation_timer >= self.attack_duration:
-                self.attacking = False
-                self.attack_animation_timer = 0
-                self.damage_done = False
-
+            self.attack_timer = max(
+                0,
+                self.attack_timer - delta
+            )
     #########################################################
     # ANIMATIONS
     #########################################################
@@ -271,6 +269,7 @@ class Character:
             ):
 
                 self.attacking = False
+                self.damage_done = False
                 self.set_animation("idle")
                 return
             # Muerte se queda en el último frame
@@ -318,13 +317,17 @@ class Character:
     # HITBOX
     #########################################################
     def get_body_rect(self):
+
         image = self.get_current_image()
+        width = image.get_width()
+        height = image.get_height()
+        margin_x = width * 0.35
         return pygame.Rect(
-            self.x + self.body_margin,
+            self.x + margin_x,
             self.y,
-            image.get_width() - self.body_margin * 2,
-            image.get_height()
-    )
+            width - margin_x * 2,
+            height
+        )
     def get_attack_rect(self):
 
         body = self.get_body_rect()

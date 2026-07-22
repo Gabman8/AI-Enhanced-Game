@@ -188,17 +188,23 @@ class Game:
     # COLLISION
     ##################################################
     def _resolve_collision(self, first, second):
+
+        if first.dead or second.dead:
+            return
         rect1 = first.get_body_rect()
         rect2 = second.get_body_rect()
         if not rect1.colliderect(rect2):
             return
         overlap = rect1.clip(rect2)
+        if overlap.width <= 0:
+            return
+        push = overlap.width / 2
         if rect1.centerx < rect2.centerx:
-            first.x -= overlap.width / 2
-            second.x += overlap.width / 2
+            first.x -= push
+            second.x += push
         else:
-            first.x += overlap.width / 2
-            second.x -= overlap.width / 2
+            first.x += push
+            second.x -= push
     ##################################################
     # PLAYER
     ##################################################
@@ -325,21 +331,16 @@ class Game:
     def _execute_action(self, character, action):
 
         if action == "MOVE_RIGHT":
-
             character.move_right(
                 self.delta_time
             )
-
             character.facing_right = True
             character.set_running(True)
             character.last_action = action
-
         elif action == "MOVE_LEFT":
-
             character.move_left(
                 self.delta_time
             )
-
             character.facing_right = False
             character.set_running(True)
             character.last_action = action
@@ -358,22 +359,16 @@ class Game:
         self.evaluate_action(self.main_character)
 
     def evaluate_action(self, agresor=None):
-        # CAMBIO: primero se procesa la cola de spawn
+     
         self._update_spawns()
 
         for enemy in self.enemies:
-
-            # CAMBIO: todavía no le toca aparecer -> ni se procesa ni se dibuja
             if not enemy.spawned:
                 continue
-
-            # CAMBIO: está corriendo hacia dentro de pantalla -> no participa
-            # en IA/combate todavía, solo se mueve en línea recta hacia dentro
             if not enemy.entered_screen:
                 self._update_entering_enemy(enemy)
                 enemy.update_animation(self.delta_time)
                 continue
-
             if agresor == self.main_character:
                  reciever = enemy
             else:
@@ -396,23 +391,32 @@ class Game:
                 reciever,
                 reciever.current_action
             )
-
-            # CAMBIO: una vez dentro, no puede volver a salir de pantalla
+            # Evita que atraviesen al jugador
             if reciever is not self.main_character:
+                self._resolve_collision(reciever, self.main_character)
                 self._clamp_to_screen(reciever)
 
+            reciever.update_attack(self.delta_time)
             reciever.update_animation(self.delta_time)
+            reciever.update_status_timers(self.delta_time)
     def _try_hit(self, attacker, victim):
+
         if not attacker.attacking:
             return
         if attacker.damage_done:
             return
-        if attacker.attack_animation_timer < attacker.attack_duration * 0.45:
+        frames = attacker.get_animation_frames()
+        if len(frames) == 0:
+            return
+        middle = len(frames) // 2
+        if attacker.animation_frame < middle:
             return
         attack = attacker.get_attack_rect()
         body = victim.get_body_rect()
         if attack.colliderect(body):
-            victim.receive_damage(attacker.punching_damage)
+            victim.receive_damage(
+                attacker.punching_damage
+            )
             attacker.damage_done = True
     ##################################################
     # DRAW
