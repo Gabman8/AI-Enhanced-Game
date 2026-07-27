@@ -1,17 +1,15 @@
 import random
 from pathlib import Path
-import pandas as pd
 import pygame
 from levels.generate_characters import get_main_character
-from AI.LLM.dialoge_generator import DialogueContext
 from screens.dialogue_box import DialogueBox
 
 GAME_ROOT = Path(__file__).resolve().parent.parent
 
 class Game:
     ATTACK_DISTANCE = 200
-    SPAWN_INTERVAL = 5.0            
-    SPAWN_INTERVAL_VARIANCE = 0.6    
+    SPAWN_INTERVAL = 1.35
+    SPAWN_INTERVAL_VARIANCE = 0.25
     SPAWN_OFFSCREEN_MARGIN = 150     
     SCREEN_ENTRY_MARGIN = 150        
 
@@ -51,12 +49,15 @@ class Game:
         self._dialogue_font = None
         self._emotion_font = None
         self._health_font = None
+        self._controls_font = None
+        self.vertical_velocity = 0
+        self.return_to_menu_requested = False
 
         
         if self.main_character is not None:
             self.main_character.y = self.ground_y
         self._spawn_queue = list(self.enemies)
-        self._spawn_timer = self._roll_spawn_delay()
+        self._spawn_timer = 0.35
 
         for enemy in self.enemies:
             enemy.y = self.ground_y
@@ -160,9 +161,12 @@ class Game:
 
     def handle_event(self, event):
         if event is None:
-            return
+            return None
 
         if event.type == self.game.KEYDOWN:
+            if event.key == self.game.K_m:
+                self.return_to_menu_requested = True
+                return "menu"
 
             if event.key == self.game.K_SPACE:
 
@@ -182,6 +186,8 @@ class Game:
                 and event.button == 1
         ):
             self.main_character.attack()
+
+        return None
 
         
     ##################################################
@@ -226,9 +232,16 @@ class Game:
                     continue
                 if enemy.dead:
                     continue
+                # ¿El enemigo golpea al jugador?
                 self._try_hit(
                     enemy,
                     self.main_character
+                )
+                # ¿El jugador golpea al enemigo? (antes esto nunca se
+                # comprobaba, por eso los enemigos no perdían vida)
+                self._try_hit(
+                    self.main_character,
+                    enemy
                 )
             if moving_right and not moving_left:
                 if wants_run:
@@ -312,17 +325,22 @@ class Game:
         character.calculate_emotions()
         return decision
     def _generate_dialogue(self, character, category=None):
-        ctx = DialogueContext(
-            enemy_type=character.type,
-            personality=character.personality,
-            anger=character.anger,
-            fear=character.fear,
-            confidence=character.confidence,
-            category=category,
-        )
-        self.dialogue_generator_async.request(character.id, ctx)
+        if self.dialogue_generator_async is None:
+            return
+
+        context = {
+            "enemy_type": character.type,
+            "personality": character.personality,
+            "anger": character.anger,
+            "fear": character.fear,
+            "confidence": character.confidence,
+            "category": category,
+        }
+        self.dialogue_generator_async.request(character.id, context)
 
     def _poll_dialogue(self, character):
+        if self.dialogue_generator_async is None:
+            return
         line = self.dialogue_generator_async.poll(character.id)
         if line:
             character.current_line = line
@@ -356,7 +374,48 @@ class Game:
             character.last_action = action
 
     def _update_enemies(self):
+        if self.decision_manager is None:
+            self._update_spawns()
+            for enemy in self.enemies:
+                if not enemy.spawned:
+                    continue
+                if not enemy.entered_screen:
+                    self._update_entering_enemy(enemy)
+                else:
+                    self._update_enemy_fallback(enemy)
+                enemy.update_attack(self.delta_time)
+                enemy.update_animation(self.delta_time)
+                enemy.update_status_timers(self.delta_time)
+            return
+
         self.evaluate_action(self.main_character)
+
+    def _update_enemy_fallback(self, enemy):
+        distance = enemy.distance_to(self.main_character)
+        enemy.facing_right = enemy.x < self.main_character.x
+
+        # Diálogo del enemigo: antes esto nunca se llamaba en el modo sin
+        # decision_manager, así que ningún enemigo pedía ni mostraba línea.
+        self._poll_dialogue(enemy)
+        enemy.decision_timer += self.delta_time
+        if enemy.decision_timer >= enemy.decision_interval:
+            self._generate_dialogue(enemy)
+            enemy.decision_timer = 0
+
+        if distance > self.ATTACK_DISTANCE * 0.7:
+            if enemy.facing_right:
+                enemy.move_right(self.delta_time)
+            else:
+                enemy.move_left(self.delta_time)
+        else:
+            enemy.stop()
+            if not enemy.attacking and enemy.attack_timer <= 0:
+                enemy.attack()
+
+        self._try_hit(enemy, self.main_character)
+        self._try_hit(self.main_character, enemy)
+        self._resolve_collision(enemy, self.main_character)
+        self._clamp_to_screen(enemy)
 
     def evaluate_action(self, agresor=None):
      
@@ -527,6 +586,28 @@ class Game:
             self.main_character
         )
 
+    def _draw_controls_overlay(self):
+        font = self._get_font("_controls_font", 18, bold=False)
+        panel_rect = pygame.Rect(self.screen.get_width() - 340, 24, 300, 170)
+        panel = self.game.Surface(panel_rect.size, self.game.SRCALPHA)
+        self.game.draw.rect(panel, (12, 17, 28, 190), panel.get_rect(), border_radius=18)
+        self.game.draw.rect(panel, (255, 255, 255, 30), panel.get_rect(), width=2, border_radius=18)
+        self.screen.blit(panel, panel_rect.topleft)
+
+        title = self._get_font("_emotion_font", 20).render("Controls", True, (255, 226, 170))
+        self.screen.blit(title, (panel_rect.x + 18, panel_rect.y + 14))
+
+        lines = [
+            "A / D  Move",
+            "Shift  Sprint",
+            "Space  Jump",
+            "J or Click  Attack",
+            "M  Menu",
+        ]
+        for index, line in enumerate(lines):
+            text = font.render(line, True, (236, 239, 245))
+            self.screen.blit(text, (panel_rect.x + 18, panel_rect.y + 48 + index * 24))
+
     ##################################################
     # GAME LOOP
     ##################################################
@@ -548,6 +629,7 @@ class Game:
         self._update_enemies()
         self._draw_character(self.main_character)
         self._draw_main_character_overlay()
+        self._draw_controls_overlay()
         for enemy in self.enemies:
 
             if not enemy.spawned:

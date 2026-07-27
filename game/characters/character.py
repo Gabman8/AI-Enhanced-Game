@@ -282,18 +282,17 @@ class Character:
 
             self.animation_frame %= len(frames)
     def get_current_image(self):
-
         frames = self.get_animation_frames()
 
         if not frames:
-            return None
+            return self.standing_image
 
         return frames[
-            min(
-                self.animation_frame,
-                len(frames) - 1
-            )
-        ]
+        min(
+            self.animation_frame,
+            len(frames) - 1
+        )
+    ]
     #########################################################
     # EMOTIONS
     #########################################################
@@ -317,17 +316,19 @@ class Character:
     # HITBOX
     #########################################################
     def get_body_rect(self):
-
         image = self.get_current_image()
-        width = image.get_width()
-        height = image.get_height()
+        if image is None:
+            width, height = 100, 150
+        else:
+            width = image.get_width()
+            height = image.get_height()
         margin_x = width * 0.35
         return pygame.Rect(
             self.x + margin_x,
             self.y,
             width - margin_x * 2,
             height
-        )
+    )
     def get_attack_rect(self):
 
         body = self.get_body_rect()
