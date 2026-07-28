@@ -79,7 +79,7 @@ class Character:
         self.show_dialogue = False
 
         # COMBATE
-        self.attack_cooldown = 1.0
+        self.attack_cooldown = 0.5
         self.attack_timer = 0
 
         self.attack_duration = 0.35

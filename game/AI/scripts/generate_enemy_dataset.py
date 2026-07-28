@@ -12,7 +12,8 @@ np.random.seed(42)
 SEQUENCE_LENGTH = 40                 
 NUM_SEQUENCES = 5000                  
 SCREEN_WIDTH = 1280                     
-ATTACK_DISTANCE = 200                    
+ATTACK_DISTANCE = 90                    
+SCREEN_ENTRY_MARGIN = 150
 DELTA_TIME = 1 / 144                      
 
 TYPE_STATS = {
@@ -108,9 +109,9 @@ def new_encounter():
         "enemy_jumping": 0,
         "enemy_attacking": 0,
         "enemy_dead": 0,
-        "enemy_facing_right": True,
+        "enemy_facing_right": False,
         "enemy_animation_state": "idle",
-        "enemy_x": 0.0,  # se fija justo debajo, en función de player_x
+        "enemy_x": 0.0,
         "enemy_y": 0.0,
         "enemy_anger": round(anger, 3),
         "enemy_fear": round(fear, 3),
@@ -129,12 +130,11 @@ def new_encounter():
         "player_y": 0.0,
     }
 
-    # El enemigo aparece a una distancia inicial "de encuentro" realista
-    # respecto al jugador (más cerca es más probable que muy lejos), en vez
-    # de en una posición totalmente independiente en el mapa.
-    initial_gap = clamp(float(np.random.exponential(scale=220.0)), 0.0, SCREEN_WIDTH)
-    side = np.random.choice([-1.0, 1.0])
-    state["enemy_x"] = clamp(state["player_x"] + side * initial_gap, 0.0, SCREEN_WIDTH)
+    # El enemigo entra siempre desde el margen derecho de la pantalla,
+    # igual que en Game._spawn_enemy / _update_entering_enemy.
+    entry_x = SCREEN_WIDTH - SCREEN_ENTRY_MARGIN
+    jitter_x = float(np.random.uniform(-40.0, 40.0))
+    state["enemy_x"] = clamp(entry_x + jitter_x, 0.0, SCREEN_WIDTH)
 
     return state
 
@@ -159,36 +159,39 @@ def decide_action(personality, distance, health_pct, anger, fear, confidence, pl
     in_range = distance <= ATTACK_DISTANCE
     base_attack = BASE_ATTACK_PROB[personality]
     fearless = personality in ("ruthless", "merciless")
+    critical_health = health_pct < 0.20
 
     if in_range:
-        flee_prob = 0.0 if fearless else clamp(
-            fear * 0.6 + (0.3 if health_pct < 0.25 else 0.0), 0.0, 0.9
+        flee_prob = clamp(
+            fear * 0.55 + (0.35 if critical_health else 0.0),
+            0.0, 0.85,
         )
+        if fearless:
+            flee_prob *= 0.25
         if np.random.rand() < flee_prob:
             return "flee"
 
         attack_prob = clamp(
             base_attack
-            + anger * 0.25
-            + confidence * 0.20
-            - fear * 0.30
+            + anger * 0.35
+            + confidence * 0.30
+            - fear * 0.25
             + (0.15 if player_health_pct < 0.3 else 0.0),
-            0.05, 0.95,
+            0.15, 0.97,
         )
         if np.random.rand() < attack_prob:
             return "attack"
         return "approach"
 
-    approach_prob = clamp(
-        base_attack * 0.8 + anger * 0.20 + confidence * 0.15 - fear * 0.35,
-        0.10, 0.95,
-    )
-    if fearless:
-        approach_prob = max(approach_prob, 0.6)
+    flee_prob = 0.0
+    if critical_health:
+        flee_prob = clamp(fear * 0.5, 0.0, 0.5)
+        if fearless:
+            flee_prob *= 0.2
+    if np.random.rand() < flee_prob:
+        return "flee"
 
-    if np.random.rand() < approach_prob:
-        return "approach"
-    return "flee"
+    return "approach"
 
 
 rows = []
@@ -261,12 +264,13 @@ for seq_idx in range(NUM_SEQUENCES):
             s["enemy_running"] = 0
             s["enemy_animation_state"] = "attack"
             if np.random.rand() < ENEMY_HIT_CHANCE:
-                dmg = s["enemy_strength"] * 0.3
+                dmg = s["enemy_strength"] * 0.2
                 s["player_health"] = clamp(s["player_health"] - dmg, 0.0, PLAYER_MAX_HEALTH)
-                s["enemy_confidence"] = clamp(s["enemy_confidence"] + np.random.uniform(0.05, 0.15), 0.0, 1.0)
+                s["enemy_confidence"] = clamp(s["enemy_confidence"] + np.random.uniform(0.08, 0.18), 0.0, 1.0)
+                s["enemy_anger"] = clamp(s["enemy_anger"] + np.random.uniform(0.02, 0.08), 0.0, 1.0)
             else:
                 s["enemy_confidence"] = clamp(s["enemy_confidence"] - 0.03, 0.0, 1.0)
-            s["enemy_anger"] = clamp(s["enemy_anger"] - np.random.uniform(0.0, 0.05), 0.0, 1.0)
+                s["enemy_anger"] = clamp(s["enemy_anger"] - np.random.uniform(0.0, 0.05), 0.0, 1.0)
         else:
             s["enemy_attacking"] = 0
             s["enemy_running"] = 1
@@ -302,7 +306,7 @@ for seq_idx in range(NUM_SEQUENCES):
         # Daño del jugador al enemigo (misma condición que Game._update_enemies)
         if s["player_attacking"] == 1 and new_distance <= ATTACK_DISTANCE:
             if np.random.rand() < PLAYER_HIT_CHANCE:
-                dmg = PLAYER_STRENGTH * 0.3
+                dmg = PLAYER_STRENGTH * 0.2
                 s["enemy_health"] = clamp(s["enemy_health"] - dmg, 0.0, s["enemy_max_health"])
                 s["enemy_times_hit"] += 1
 
