@@ -351,46 +351,12 @@ This project is under the MIT License - see the [LICENSE](LICENSE) file for deta
 
 ---
 
-## 👨‍💻 Author
-
-**Gabriel Diaconu** - Game developer with AI expertise
-
-- GitHub: [@gabrieldiaconu](https://github.com/gabrieldiaconu)
-- Email: gabriel.diaconu@example.com
-
----
-
 ## 🙏 Acknowledgments
 
 - **Qwen/Alibaba** for the language model
 - **Pygame Community** for excellent documentation
 - **Scikit-learn** for ML tools
 - All contributors and testers
-
----
-
-## 📞 Support
-
-If you encounter issues or have suggestions:
-
-1. **Check existing issues** on GitHub
-2. **Create a new issue** with specific details
-3. **Include Python version**, operating system, and exact error
-4. **Attach logs** if necessary
-
----
-
-## 🚦 Future Roadmap
-
-- [ ] Online multiplayer
-- [ ] Level editor
-- [ ] Mod support
-- [ ] More enemy types
-- [ ] Campaign with story
-- [ ] Achievement system
-- [ ] Global leaderboard
-
----
 
 **Enjoy the game! 🎮✨**
 
