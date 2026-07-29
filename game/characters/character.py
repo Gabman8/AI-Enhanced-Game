@@ -38,12 +38,14 @@ class Character:
         self.fear = fear
         self.times_hit = 0
         self.times_attack = 0
+        self.hits_landed = 0
+        self.damage_received = 0.0
         self.confidence = confidence
         self.decide_action = False
 
         self.current_action = "IDLE"
         self.decision_timer = 0
-        self.decision_interval = 1.5
+        self.decision_interval = 0.8  # Faster decision making for emotion changes
         # Estadísticas
         self.health = health
         self.max_health = health
@@ -67,6 +69,8 @@ class Character:
         self.facing_right = True
         self.show_emotion = False
         self.emotion_timer = 0
+        self.death_timer = 0  # Timer to fade out dead enemies
+        self.should_remove = False  # Flag to remove dead enemies
 
         # Animación
         self.animation_state = "idle"
@@ -79,10 +83,10 @@ class Character:
         self.show_dialogue = False
 
         # COMBATE
-        self.attack_cooldown = 0.5
+        self.attack_cooldown = 0.3
         self.attack_timer = 0
 
-        self.attack_duration = 0.35
+        self.attack_duration = 0.2
         self.attack_animation_timer = 0
 
         self.damage_done = False
@@ -128,6 +132,12 @@ class Character:
             self.emotion_timer -= delta
             if self.emotion_timer <= 0:
                 self.show_emotion = False
+        
+        # Death timer: enemies fade out after 2 seconds
+        if self.dead:
+            self.death_timer += delta
+            if self.death_timer > 2.0:
+                self.should_remove = True
 
     #########################################################
     # MOVEMENT
@@ -186,6 +196,7 @@ class Character:
         if self.dead:
             return
         self.times_hit += 1
+        self.damage_received += float(damage)
 
         self.health -= damage
 
@@ -202,6 +213,9 @@ class Character:
         self.attacking = False
         self.falling = True
         self.vertical_velocity = 0
+        self.death_timer = 0
+        # Lock facing direction at death — don't flip while falling
+        self._death_facing_right = self.facing_right
         self.set_animation("death")
         
     def update_physics(self, delta_time, ground_y):
@@ -297,20 +311,36 @@ class Character:
     # EMOTIONS
     #########################################################
     def calculate_emotions(self):
+        """Apply emotion-based adjustments to emotional stats."""
         self.show_emotion = True
         self.emotion_timer = 1.0
+        
+        # Reset all to baseline then adjust based on emotion
+        base_anger = 0.3
+        base_fear = 0.2
+        base_confidence = 0.5
+        
         if self.emotion == "calm":
-            self.anger = self.anger if self.decrement_emotion(self.anger,0.2) <= 0 else self.decrement_emotion(self.anger,0.2)
-            self.confidence =self.confidence if self.increment_emotion(self.confidence,0.2) >= 1 else self.increment_emotion(self.confidence,0.2)
-            self.fear = self.fear if self.decrement_emotion(self.fear,0.2) <= 0 else self.decrement_emotion(self.fear,0.2)
+            self.anger = base_anger - 0.2
+            self.confidence = min(1, base_confidence + 0.2)
+            self.fear = base_fear - 0.15
         elif self.emotion == "confident":
-            self.anger = self.anger if self.decrement_emotion(self.anger,0.2) <= 0 else self.decrement_emotion(self.anger,0.2)
-            self.confidence = self.confidence if self.increment_emotion(self.confidence,0.3) >= 1 else self.increment_emotion(self.confidence,0.3)
-            self.fear = self.fear if self.decrement_emotion(self.fear,0.2) <= 0 else self.decrement_emotion(self.fear,0.2)
+            self.anger = base_anger - 0.15
+            self.confidence = min(1, base_confidence + 0.35)
+            self.fear = base_fear - 0.15
         elif self.emotion == "angry":
-            self.anger = self.confidence if self.increment_emotion(self.confidence,0.3) >= 1 else self.increment_emotion(self.confidence,0.3)
-            self.confidence = self.confidence if self.increment_emotion(self.confidence,0.1) >= 1 else self.increment_emotion(self.confidence,0.1)
-            self.fear = self.fear if self.decrement_emotion(self.fear,0.2) <= 0 else self.decrement_emotion(self.fear,0.2)
+            self.anger = min(1, base_anger + 0.4)
+            self.confidence = min(1, base_confidence + 0.15)
+            self.fear = base_fear - 0.15
+        elif self.emotion == "afraid":
+            self.anger = base_anger - 0.2
+            self.confidence = max(0, base_confidence - 0.35)
+            self.fear = min(1, base_fear + 0.5)
+        
+        # Clamp all to 0-1
+        self.anger = max(0, min(1, self.anger))
+        self.fear = max(0, min(1, self.fear))
+        self.confidence = max(0, min(1, self.confidence))
 
     #########################################################
     # HITBOX

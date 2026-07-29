@@ -1,15 +1,15 @@
-class DeathScreen:
+class FinishScreen:
     def __init__(self, pygame, screen, font_size=140, subtitle_font_size=36, font_name="Courier"):
         self.pygame = pygame
         self.screen = screen
         self.font = pygame.font.SysFont(font_name, font_size, bold=True)
         self.subtitle_font = pygame.font.SysFont(font_name, subtitle_font_size, bold=False)
 
-    def create_death_screen(
+    def create_finish_screen(
         self,
         event,
-        title="You died!",
-        subtitle="Press Click To Try Again",
+        title,
+        subtitle,
         accent=(200, 40, 40),
     ):
         """Dibuja la pantalla de muerte/victoria. Devuelve True si el jugador

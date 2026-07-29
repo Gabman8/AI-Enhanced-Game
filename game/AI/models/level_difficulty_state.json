@@ -1,0 +1,1483 @@
+{
+  "current_level": 26,
+  "skill_estimate": 0.42044520758339454,
+  "history": [
+    {
+      "level": 1,
+      "passed": false,
+      "performance": 0.05,
+      "stats": {
+        "level": 1,
+        "enemies_spawned": 3,
+        "enemies_killed": 0,
+        "player_damage_received": 105.6,
+        "player_health_remaining": 0,
+        "player_attacks": 0,
+        "player_hits": 5,
+        "player_accuracy": 0.0,
+        "time_seconds": 7.68,
+        "times_player_died": 1,
+        "times_hit": 12,
+        "level_passed": 0
+      }
+    },
+    {
+      "level": 1,
+      "passed": false,
+      "performance": 0.05,
+      "stats": {
+        "level": 1,
+        "enemies_spawned": 3,
+        "enemies_killed": 0,
+        "player_damage_received": 105.6,
+        "player_health_remaining": 0,
+        "player_attacks": 0,
+        "player_hits": 5,
+        "player_accuracy": 0.0,
+        "time_seconds": 7.68,
+        "times_player_died": 1,
+        "times_hit": 12,
+        "level_passed": 0
+      }
+    },
+    {
+      "level": 1,
+      "passed": false,
+      "performance": 0.05,
+      "stats": {
+        "level": 1,
+        "enemies_spawned": 4,
+        "enemies_killed": 0,
+        "player_damage_received": 100.8,
+        "player_health_remaining": 0,
+        "player_attacks": 0,
+        "player_hits": 8,
+        "player_accuracy": 0.0,
+        "time_seconds": 10.31,
+        "times_player_died": 1,
+        "times_hit": 12,
+        "level_passed": 0
+      }
+    },
+    {
+      "level": 1,
+      "passed": false,
+      "performance": 0.05,
+      "stats": {
+        "level": 1,
+        "enemies_spawned": 4,
+        "enemies_killed": 0,
+        "player_damage_received": 100.8,
+        "player_health_remaining": 0,
+        "player_attacks": 0,
+        "player_hits": 8,
+        "player_accuracy": 0.0,
+        "time_seconds": 10.31,
+        "times_player_died": 1,
+        "times_hit": 12,
+        "level_passed": 0
+      }
+    },
+    {
+      "level": 1,
+      "passed": false,
+      "performance": 0.05,
+      "stats": {
+        "level": 1,
+        "enemies_spawned": 6,
+        "enemies_killed": 5,
+        "player_damage_received": 100.8,
+        "player_health_remaining": 0,
+        "player_attacks": 0,
+        "player_hits": 27,
+        "player_accuracy": 0.0,
+        "time_seconds": 24.6,
+        "times_player_died": 1,
+        "times_hit": 21,
+        "level_passed": 0
+      }
+    },
+    {
+      "level": 1,
+      "passed": false,
+      "performance": 0.05,
+      "stats": {
+        "level": 1,
+        "enemies_spawned": 6,
+        "enemies_killed": 5,
+        "player_damage_received": 100.8,
+        "player_health_remaining": 0,
+        "player_attacks": 0,
+        "player_hits": 27,
+        "player_accuracy": 0.0,
+        "time_seconds": 24.6,
+        "times_player_died": 1,
+        "times_hit": 21,
+        "level_passed": 0
+      }
+    },
+    {
+      "level": 1,
+      "passed": false,
+      "performance": 0.05,
+      "stats": {
+        "level": 1,
+        "enemies_spawned": 3,
+        "enemies_killed": 0,
+        "player_damage_received": 105.6,
+        "player_health_remaining": 0,
+        "player_attacks": 0,
+        "player_hits": 6,
+        "player_accuracy": 0.0,
+        "time_seconds": 7.67,
+        "times_player_died": 1,
+        "times_hit": 11,
+        "level_passed": 0
+      }
+    },
+    {
+      "level": 1,
+      "passed": false,
+      "performance": 0.05,
+      "stats": {
+        "level": 1,
+        "enemies_spawned": 3,
+        "enemies_killed": 0,
+        "player_damage_received": 105.6,
+        "player_health_remaining": 0,
+        "player_attacks": 0,
+        "player_hits": 6,
+        "player_accuracy": 0.0,
+        "time_seconds": 7.67,
+        "times_player_died": 1,
+        "times_hit": 11,
+        "level_passed": 0
+      }
+    },
+    {
+      "level": 1,
+      "passed": false,
+      "performance": 0.05,
+      "stats": {
+        "level": 1,
+        "enemies_spawned": 5,
+        "enemies_killed": 2,
+        "player_damage_received": 100.8,
+        "player_health_remaining": 0,
+        "player_attacks": 0,
+        "player_hits": 12,
+        "player_accuracy": 0.0,
+        "time_seconds": 14.46,
+        "times_player_died": 1,
+        "times_hit": 14,
+        "level_passed": 0
+      }
+    },
+    {
+      "level": 1,
+      "passed": false,
+      "performance": 0.05,
+      "stats": {
+        "level": 1,
+        "enemies_spawned": 5,
+        "enemies_killed": 2,
+        "player_damage_received": 100.8,
+        "player_health_remaining": 0,
+        "player_attacks": 0,
+        "player_hits": 12,
+        "player_accuracy": 0.0,
+        "time_seconds": 14.46,
+        "times_player_died": 1,
+        "times_hit": 14,
+        "level_passed": 0
+      }
+    },
+    {
+      "level": 1,
+      "passed": false,
+      "performance": 0.05,
+      "stats": {
+        "level": 1,
+        "enemies_spawned": 5,
+        "enemies_killed": 1,
+        "player_damage_received": 100.8,
+        "player_health_remaining": 0,
+        "player_attacks": 0,
+        "player_hits": 8,
+        "player_accuracy": 0.0,
+        "time_seconds": 12.94,
+        "times_player_died": 1,
+        "times_hit": 12,
+        "level_passed": 0
+      }
+    },
+    {
+      "level": 1,
+      "passed": false,
+      "performance": 0.05,
+      "stats": {
+        "level": 1,
+        "enemies_spawned": 5,
+        "enemies_killed": 1,
+        "player_damage_received": 100.8,
+        "player_health_remaining": 0,
+        "player_attacks": 0,
+        "player_hits": 8,
+        "player_accuracy": 0.0,
+        "time_seconds": 12.94,
+        "times_player_died": 1,
+        "times_hit": 12,
+        "level_passed": 0
+      }
+    },
+    {
+      "level": 1,
+      "passed": false,
+      "performance": 0.05,
+      "stats": {
+        "level": 1,
+        "enemies_spawned": 6,
+        "enemies_killed": 4,
+        "player_damage_received": 100.8,
+        "player_health_remaining": 0,
+        "player_attacks": 0,
+        "player_hits": 26,
+        "player_accuracy": 0.0,
+        "time_seconds": 24.14,
+        "times_player_died": 1,
+        "times_hit": 21,
+        "level_passed": 0
+      }
+    },
+    {
+      "level": 1,
+      "passed": false,
+      "performance": 0.05,
+      "stats": {
+        "level": 1,
+        "enemies_spawned": 6,
+        "enemies_killed": 4,
+        "player_damage_received": 100.8,
+        "player_health_remaining": 0,
+        "player_attacks": 0,
+        "player_hits": 26,
+        "player_accuracy": 0.0,
+        "time_seconds": 24.14,
+        "times_player_died": 1,
+        "times_hit": 21,
+        "level_passed": 0
+      }
+    },
+    {
+      "level": 1,
+      "passed": false,
+      "performance": 0.05,
+      "stats": {
+        "level": 1,
+        "enemies_spawned": 3,
+        "enemies_killed": 0,
+        "player_damage_received": 105.6,
+        "player_health_remaining": 0,
+        "player_attacks": 0,
+        "player_hits": 6,
+        "player_accuracy": 0.0,
+        "time_seconds": 7.67,
+        "times_player_died": 1,
+        "times_hit": 12,
+        "level_passed": 0
+      }
+    },
+    {
+      "level": 1,
+      "passed": false,
+      "performance": 0.05,
+      "stats": {
+        "level": 1,
+        "enemies_spawned": 3,
+        "enemies_killed": 0,
+        "player_damage_received": 105.6,
+        "player_health_remaining": 0,
+        "player_attacks": 0,
+        "player_hits": 6,
+        "player_accuracy": 0.0,
+        "time_seconds": 7.67,
+        "times_player_died": 1,
+        "times_hit": 12,
+        "level_passed": 0
+      }
+    },
+    {
+      "level": 1,
+      "passed": true,
+      "performance": 0.462,
+      "stats": {
+        "level": 1,
+        "enemies_spawned": 4,
+        "enemies_killed": 4,
+        "player_damage_received": 12.6,
+        "player_health_remaining": 87.4,
+        "player_attacks": 0,
+        "player_hits": 23,
+        "player_accuracy": 0.0,
+        "time_seconds": 19.59,
+        "times_player_died": 0,
+        "times_hit": 3,
+        "level_passed": 1
+      }
+    },
+    {
+      "level": 2,
+      "passed": true,
+      "performance": 0.5,
+      "stats": {
+        "level": 2,
+        "enemies_spawned": 3,
+        "enemies_killed": 3,
+        "player_damage_received": 0.0,
+        "player_health_remaining": 100,
+        "player_attacks": 0,
+        "player_hits": 23,
+        "player_accuracy": 0.0,
+        "time_seconds": 16.52,
+        "times_player_died": 0,
+        "times_hit": 0,
+        "level_passed": 1
+      }
+    },
+    {
+      "level": 3,
+      "passed": true,
+      "performance": 0.5,
+      "stats": {
+        "level": 3,
+        "enemies_spawned": 2,
+        "enemies_killed": 2,
+        "player_damage_received": 0.0,
+        "player_health_remaining": 100,
+        "player_attacks": 0,
+        "player_hits": 12,
+        "player_accuracy": 0.0,
+        "time_seconds": 14.66,
+        "times_player_died": 0,
+        "times_hit": 0,
+        "level_passed": 1
+      }
+    },
+    {
+      "level": 4,
+      "passed": true,
+      "performance": 0.236,
+      "stats": {
+        "level": 4,
+        "enemies_spawned": 2,
+        "enemies_killed": 2,
+        "player_damage_received": 88.0,
+        "player_health_remaining": 12.0,
+        "player_attacks": 0,
+        "player_hits": 12,
+        "player_accuracy": 0.0,
+        "time_seconds": 12.95,
+        "times_player_died": 0,
+        "times_hit": 11,
+        "level_passed": 1
+      }
+    },
+    {
+      "level": 5,
+      "passed": false,
+      "performance": 0.05,
+      "stats": {
+        "level": 5,
+        "enemies_spawned": 4,
+        "enemies_killed": 3,
+        "player_damage_received": 106.4,
+        "player_health_remaining": 0,
+        "player_attacks": 0,
+        "player_hits": 16,
+        "player_accuracy": 0.0,
+        "time_seconds": 17.91,
+        "times_player_died": 1,
+        "times_hit": 18,
+        "level_passed": 0
+      }
+    },
+    {
+      "level": 5,
+      "passed": false,
+      "performance": 0.05,
+      "stats": {
+        "level": 5,
+        "enemies_spawned": 4,
+        "enemies_killed": 3,
+        "player_damage_received": 106.4,
+        "player_health_remaining": 0,
+        "player_attacks": 0,
+        "player_hits": 16,
+        "player_accuracy": 0.0,
+        "time_seconds": 17.91,
+        "times_player_died": 1,
+        "times_hit": 18,
+        "level_passed": 0
+      }
+    },
+    {
+      "level": 5,
+      "passed": true,
+      "performance": 0.311,
+      "stats": {
+        "level": 5,
+        "enemies_spawned": 4,
+        "enemies_killed": 4,
+        "player_damage_received": 63.0,
+        "player_health_remaining": 37.0,
+        "player_attacks": 0,
+        "player_hits": 16,
+        "player_accuracy": 0.0,
+        "time_seconds": 16.84,
+        "times_player_died": 0,
+        "times_hit": 15,
+        "level_passed": 1
+      }
+    },
+    {
+      "level": 6,
+      "passed": false,
+      "performance": 0.05,
+      "stats": {
+        "level": 6,
+        "enemies_spawned": 3,
+        "enemies_killed": 1,
+        "player_damage_received": 103.2,
+        "player_health_remaining": 0,
+        "player_attacks": 0,
+        "player_hits": 11,
+        "player_accuracy": 0.0,
+        "time_seconds": 11.83,
+        "times_player_died": 1,
+        "times_hit": 12,
+        "level_passed": 0
+      }
+    },
+    {
+      "level": 6,
+      "passed": false,
+      "performance": 0.05,
+      "stats": {
+        "level": 6,
+        "enemies_spawned": 3,
+        "enemies_killed": 1,
+        "player_damage_received": 103.2,
+        "player_health_remaining": 0,
+        "player_attacks": 0,
+        "player_hits": 11,
+        "player_accuracy": 0.0,
+        "time_seconds": 11.83,
+        "times_player_died": 1,
+        "times_hit": 12,
+        "level_passed": 0
+      }
+    },
+    {
+      "level": 6,
+      "passed": false,
+      "performance": 0.05,
+      "stats": {
+        "level": 6,
+        "enemies_spawned": 4,
+        "enemies_killed": 0,
+        "player_damage_received": 100.8,
+        "player_health_remaining": 0,
+        "player_attacks": 0,
+        "player_hits": 0,
+        "player_accuracy": 0.0,
+        "time_seconds": 11.19,
+        "times_player_died": 1,
+        "times_hit": 24,
+        "level_passed": 0
+      }
+    },
+    {
+      "level": 6,
+      "passed": false,
+      "performance": 0.05,
+      "stats": {
+        "level": 6,
+        "enemies_spawned": 4,
+        "enemies_killed": 0,
+        "player_damage_received": 100.8,
+        "player_health_remaining": 0,
+        "player_attacks": 0,
+        "player_hits": 0,
+        "player_accuracy": 0.0,
+        "time_seconds": 11.19,
+        "times_player_died": 1,
+        "times_hit": 24,
+        "level_passed": 0
+      }
+    },
+    {
+      "level": 6,
+      "passed": false,
+      "performance": 0.05,
+      "stats": {
+        "level": 6,
+        "enemies_spawned": 4,
+        "enemies_killed": 2,
+        "player_damage_received": 100.8,
+        "player_health_remaining": 0,
+        "player_attacks": 0,
+        "player_hits": 11,
+        "player_accuracy": 0.0,
+        "time_seconds": 12.32,
+        "times_player_died": 1,
+        "times_hit": 24,
+        "level_passed": 0
+      }
+    },
+    {
+      "level": 6,
+      "passed": false,
+      "performance": 0.05,
+      "stats": {
+        "level": 6,
+        "enemies_spawned": 4,
+        "enemies_killed": 2,
+        "player_damage_received": 100.8,
+        "player_health_remaining": 0,
+        "player_attacks": 0,
+        "player_hits": 11,
+        "player_accuracy": 0.0,
+        "time_seconds": 12.32,
+        "times_player_died": 1,
+        "times_hit": 24,
+        "level_passed": 0
+      }
+    },
+    {
+      "level": 6,
+      "passed": true,
+      "performance": 0.374,
+      "stats": {
+        "level": 6,
+        "enemies_spawned": 4,
+        "enemies_killed": 4,
+        "player_damage_received": 42.0,
+        "player_health_remaining": 58.0,
+        "player_attacks": 0,
+        "player_hits": 17,
+        "player_accuracy": 0.0,
+        "time_seconds": 16.87,
+        "times_player_died": 0,
+        "times_hit": 10,
+        "level_passed": 1
+      }
+    },
+    {
+      "level": 7,
+      "passed": false,
+      "performance": 0.05,
+      "stats": {
+        "level": 7,
+        "enemies_spawned": 3,
+        "enemies_killed": 1,
+        "player_damage_received": 100.8,
+        "player_health_remaining": 0,
+        "player_attacks": 0,
+        "player_hits": 11,
+        "player_accuracy": 0.0,
+        "time_seconds": 10.54,
+        "times_player_died": 1,
+        "times_hit": 19,
+        "level_passed": 0
+      }
+    },
+    {
+      "level": 7,
+      "passed": false,
+      "performance": 0.05,
+      "stats": {
+        "level": 7,
+        "enemies_spawned": 3,
+        "enemies_killed": 1,
+        "player_damage_received": 100.8,
+        "player_health_remaining": 0,
+        "player_attacks": 0,
+        "player_hits": 11,
+        "player_accuracy": 0.0,
+        "time_seconds": 10.54,
+        "times_player_died": 1,
+        "times_hit": 19,
+        "level_passed": 0
+      }
+    },
+    {
+      "level": 7,
+      "passed": false,
+      "performance": 0.05,
+      "stats": {
+        "level": 7,
+        "enemies_spawned": 4,
+        "enemies_killed": 3,
+        "player_damage_received": 107.4,
+        "player_health_remaining": 0,
+        "player_attacks": 0,
+        "player_hits": 16,
+        "player_accuracy": 0.0,
+        "time_seconds": 16.58,
+        "times_player_died": 1,
+        "times_hit": 13,
+        "level_passed": 0
+      }
+    },
+    {
+      "level": 7,
+      "passed": false,
+      "performance": 0.05,
+      "stats": {
+        "level": 7,
+        "enemies_spawned": 4,
+        "enemies_killed": 3,
+        "player_damage_received": 107.4,
+        "player_health_remaining": 0,
+        "player_attacks": 0,
+        "player_hits": 16,
+        "player_accuracy": 0.0,
+        "time_seconds": 16.58,
+        "times_player_died": 1,
+        "times_hit": 13,
+        "level_passed": 0
+      }
+    },
+    {
+      "level": 7,
+      "passed": true,
+      "performance": 0.255,
+      "stats": {
+        "level": 7,
+        "enemies_spawned": 4,
+        "enemies_killed": 4,
+        "player_damage_received": 81.6,
+        "player_health_remaining": 18.4,
+        "player_attacks": 0,
+        "player_hits": 20,
+        "player_accuracy": 0.0,
+        "time_seconds": 19.33,
+        "times_player_died": 0,
+        "times_hit": 10,
+        "level_passed": 1
+      }
+    },
+    {
+      "level": 8,
+      "passed": false,
+      "performance": 0.05,
+      "stats": {
+        "level": 8,
+        "enemies_spawned": 3,
+        "enemies_killed": 1,
+        "player_damage_received": 102.2,
+        "player_health_remaining": 0,
+        "player_attacks": 0,
+        "player_hits": 11,
+        "player_accuracy": 0.0,
+        "time_seconds": 13.97,
+        "times_player_died": 1,
+        "times_hit": 17,
+        "level_passed": 0
+      }
+    },
+    {
+      "level": 8,
+      "passed": false,
+      "performance": 0.05,
+      "stats": {
+        "level": 8,
+        "enemies_spawned": 3,
+        "enemies_killed": 1,
+        "player_damage_received": 102.2,
+        "player_health_remaining": 0,
+        "player_attacks": 0,
+        "player_hits": 11,
+        "player_accuracy": 0.0,
+        "time_seconds": 13.97,
+        "times_player_died": 1,
+        "times_hit": 17,
+        "level_passed": 0
+      }
+    },
+    {
+      "level": 8,
+      "passed": false,
+      "performance": 0.05,
+      "stats": {
+        "level": 8,
+        "enemies_spawned": 4,
+        "enemies_killed": 3,
+        "player_damage_received": 100.8,
+        "player_health_remaining": 0,
+        "player_attacks": 0,
+        "player_hits": 15,
+        "player_accuracy": 0.0,
+        "time_seconds": 15.41,
+        "times_player_died": 1,
+        "times_hit": 24,
+        "level_passed": 0
+      }
+    },
+    {
+      "level": 8,
+      "passed": false,
+      "performance": 0.05,
+      "stats": {
+        "level": 8,
+        "enemies_spawned": 4,
+        "enemies_killed": 3,
+        "player_damage_received": 100.8,
+        "player_health_remaining": 0,
+        "player_attacks": 0,
+        "player_hits": 15,
+        "player_accuracy": 0.0,
+        "time_seconds": 15.41,
+        "times_player_died": 1,
+        "times_hit": 24,
+        "level_passed": 0
+      }
+    },
+    {
+      "level": 8,
+      "passed": true,
+      "performance": 0.424,
+      "stats": {
+        "level": 8,
+        "enemies_spawned": 4,
+        "enemies_killed": 4,
+        "player_damage_received": 25.2,
+        "player_health_remaining": 74.8,
+        "player_attacks": 0,
+        "player_hits": 17,
+        "player_accuracy": 0.0,
+        "time_seconds": 16.34,
+        "times_player_died": 0,
+        "times_hit": 6,
+        "level_passed": 1
+      }
+    },
+    {
+      "level": 9,
+      "passed": false,
+      "performance": 0.05,
+      "stats": {
+        "level": 9,
+        "enemies_spawned": 3,
+        "enemies_killed": 1,
+        "player_damage_received": 100.0,
+        "player_health_remaining": 0,
+        "player_attacks": 0,
+        "player_hits": 7,
+        "player_accuracy": 0.0,
+        "time_seconds": 12.41,
+        "times_player_died": 1,
+        "times_hit": 17,
+        "level_passed": 0
+      }
+    },
+    {
+      "level": 9,
+      "passed": false,
+      "performance": 0.05,
+      "stats": {
+        "level": 9,
+        "enemies_spawned": 3,
+        "enemies_killed": 1,
+        "player_damage_received": 100.0,
+        "player_health_remaining": 0,
+        "player_attacks": 0,
+        "player_hits": 7,
+        "player_accuracy": 0.0,
+        "time_seconds": 12.41,
+        "times_player_died": 1,
+        "times_hit": 17,
+        "level_passed": 0
+      }
+    },
+    {
+      "level": 9,
+      "passed": false,
+      "performance": 0.05,
+      "stats": {
+        "level": 9,
+        "enemies_spawned": 4,
+        "enemies_killed": 2,
+        "player_damage_received": 100.8,
+        "player_health_remaining": 0,
+        "player_attacks": 0,
+        "player_hits": 14,
+        "player_accuracy": 0.0,
+        "time_seconds": 16.27,
+        "times_player_died": 1,
+        "times_hit": 24,
+        "level_passed": 0
+      }
+    },
+    {
+      "level": 9,
+      "passed": false,
+      "performance": 0.05,
+      "stats": {
+        "level": 9,
+        "enemies_spawned": 4,
+        "enemies_killed": 2,
+        "player_damage_received": 100.8,
+        "player_health_remaining": 0,
+        "player_attacks": 0,
+        "player_hits": 14,
+        "player_accuracy": 0.0,
+        "time_seconds": 16.27,
+        "times_player_died": 1,
+        "times_hit": 24,
+        "level_passed": 0
+      }
+    },
+    {
+      "level": 9,
+      "passed": false,
+      "performance": 0.05,
+      "stats": {
+        "level": 9,
+        "enemies_spawned": 4,
+        "enemies_killed": 3,
+        "player_damage_received": 106.0,
+        "player_health_remaining": 0,
+        "player_attacks": 0,
+        "player_hits": 15,
+        "player_accuracy": 0.0,
+        "time_seconds": 15.51,
+        "times_player_died": 1,
+        "times_hit": 20,
+        "level_passed": 0
+      }
+    },
+    {
+      "level": 9,
+      "passed": false,
+      "performance": 0.05,
+      "stats": {
+        "level": 9,
+        "enemies_spawned": 4,
+        "enemies_killed": 3,
+        "player_damage_received": 106.0,
+        "player_health_remaining": 0,
+        "player_attacks": 0,
+        "player_hits": 15,
+        "player_accuracy": 0.0,
+        "time_seconds": 15.51,
+        "times_player_died": 1,
+        "times_hit": 20,
+        "level_passed": 0
+      }
+    },
+    {
+      "level": 9,
+      "passed": false,
+      "performance": 0.05,
+      "stats": {
+        "level": 9,
+        "enemies_spawned": 4,
+        "enemies_killed": 3,
+        "player_damage_received": 101.8,
+        "player_health_remaining": 0,
+        "player_attacks": 0,
+        "player_hits": 17,
+        "player_accuracy": 0.0,
+        "time_seconds": 19.94,
+        "times_player_died": 1,
+        "times_hit": 19,
+        "level_passed": 0
+      }
+    },
+    {
+      "level": 9,
+      "passed": false,
+      "performance": 0.05,
+      "stats": {
+        "level": 9,
+        "enemies_spawned": 4,
+        "enemies_killed": 3,
+        "player_damage_received": 101.8,
+        "player_health_remaining": 0,
+        "player_attacks": 0,
+        "player_hits": 17,
+        "player_accuracy": 0.0,
+        "time_seconds": 19.94,
+        "times_player_died": 1,
+        "times_hit": 19,
+        "level_passed": 0
+      }
+    },
+    {
+      "level": 9,
+      "passed": false,
+      "performance": 0.05,
+      "stats": {
+        "level": 9,
+        "enemies_spawned": 4,
+        "enemies_killed": 3,
+        "player_damage_received": 100.8,
+        "player_health_remaining": 0,
+        "player_attacks": 0,
+        "player_hits": 15,
+        "player_accuracy": 0.0,
+        "time_seconds": 14.39,
+        "times_player_died": 1,
+        "times_hit": 24,
+        "level_passed": 0
+      }
+    },
+    {
+      "level": 9,
+      "passed": false,
+      "performance": 0.05,
+      "stats": {
+        "level": 9,
+        "enemies_spawned": 4,
+        "enemies_killed": 3,
+        "player_damage_received": 100.8,
+        "player_health_remaining": 0,
+        "player_attacks": 0,
+        "player_hits": 15,
+        "player_accuracy": 0.0,
+        "time_seconds": 14.39,
+        "times_player_died": 1,
+        "times_hit": 24,
+        "level_passed": 0
+      }
+    },
+    {
+      "level": 9,
+      "passed": false,
+      "performance": 0.05,
+      "stats": {
+        "level": 9,
+        "enemies_spawned": 4,
+        "enemies_killed": 2,
+        "player_damage_received": 106.6,
+        "player_health_remaining": 0,
+        "player_attacks": 0,
+        "player_hits": 12,
+        "player_accuracy": 0.0,
+        "time_seconds": 15.19,
+        "times_player_died": 1,
+        "times_hit": 17,
+        "level_passed": 0
+      }
+    },
+    {
+      "level": 9,
+      "passed": false,
+      "performance": 0.05,
+      "stats": {
+        "level": 9,
+        "enemies_spawned": 4,
+        "enemies_killed": 2,
+        "player_damage_received": 106.6,
+        "player_health_remaining": 0,
+        "player_attacks": 0,
+        "player_hits": 12,
+        "player_accuracy": 0.0,
+        "time_seconds": 15.19,
+        "times_player_died": 1,
+        "times_hit": 17,
+        "level_passed": 0
+      }
+    },
+    {
+      "level": 9,
+      "passed": true,
+      "performance": 0.273,
+      "stats": {
+        "level": 9,
+        "enemies_spawned": 4,
+        "enemies_killed": 4,
+        "player_damage_received": 75.6,
+        "player_health_remaining": 24.4,
+        "player_attacks": 0,
+        "player_hits": 17,
+        "player_accuracy": 0.0,
+        "time_seconds": 18.14,
+        "times_player_died": 0,
+        "times_hit": 18,
+        "level_passed": 1
+      }
+    },
+    {
+      "level": 10,
+      "passed": true,
+      "performance": 0.41,
+      "stats": {
+        "level": 10,
+        "enemies_spawned": 3,
+        "enemies_killed": 3,
+        "player_damage_received": 30.0,
+        "player_health_remaining": 70.0,
+        "player_attacks": 0,
+        "player_hits": 16,
+        "player_accuracy": 0.0,
+        "time_seconds": 18.58,
+        "times_player_died": 0,
+        "times_hit": 4,
+        "level_passed": 1
+      }
+    },
+    {
+      "level": 11,
+      "passed": false,
+      "performance": 0.05,
+      "stats": {
+        "level": 11,
+        "enemies_spawned": 3,
+        "enemies_killed": 2,
+        "player_damage_received": 104.0,
+        "player_health_remaining": 0,
+        "player_attacks": 0,
+        "player_hits": 14,
+        "player_accuracy": 0.0,
+        "time_seconds": 13.06,
+        "times_player_died": 1,
+        "times_hit": 13,
+        "level_passed": 0
+      }
+    },
+    {
+      "level": 11,
+      "passed": false,
+      "performance": 0.05,
+      "stats": {
+        "level": 11,
+        "enemies_spawned": 3,
+        "enemies_killed": 2,
+        "player_damage_received": 104.0,
+        "player_health_remaining": 0,
+        "player_attacks": 0,
+        "player_hits": 14,
+        "player_accuracy": 0.0,
+        "time_seconds": 13.06,
+        "times_player_died": 1,
+        "times_hit": 13,
+        "level_passed": 0
+      }
+    },
+    {
+      "level": 11,
+      "passed": true,
+      "performance": 0.374,
+      "stats": {
+        "level": 11,
+        "enemies_spawned": 4,
+        "enemies_killed": 4,
+        "player_damage_received": 42.0,
+        "player_health_remaining": 58.0,
+        "player_attacks": 0,
+        "player_hits": 16,
+        "player_accuracy": 0.0,
+        "time_seconds": 16.52,
+        "times_player_died": 0,
+        "times_hit": 10,
+        "level_passed": 1
+      }
+    },
+    {
+      "level": 12,
+      "passed": true,
+      "performance": 0.223,
+      "stats": {
+        "level": 12,
+        "enemies_spawned": 3,
+        "enemies_killed": 3,
+        "player_damage_received": 92.4,
+        "player_health_remaining": 7.6,
+        "player_attacks": 0,
+        "player_hits": 14,
+        "player_accuracy": 0.0,
+        "time_seconds": 14.06,
+        "times_player_died": 0,
+        "times_hit": 17,
+        "level_passed": 1
+      }
+    },
+    {
+      "level": 13,
+      "passed": true,
+      "performance": 0.423,
+      "stats": {
+        "level": 13,
+        "enemies_spawned": 3,
+        "enemies_killed": 3,
+        "player_damage_received": 25.8,
+        "player_health_remaining": 74.2,
+        "player_attacks": 0,
+        "player_hits": 14,
+        "player_accuracy": 0.0,
+        "time_seconds": 24.1,
+        "times_player_died": 0,
+        "times_hit": 3,
+        "level_passed": 1
+      }
+    },
+    {
+      "level": 14,
+      "passed": true,
+      "performance": 0.368,
+      "stats": {
+        "level": 14,
+        "enemies_spawned": 3,
+        "enemies_killed": 3,
+        "player_damage_received": 44.0,
+        "player_health_remaining": 56.0,
+        "player_attacks": 0,
+        "player_hits": 16,
+        "player_accuracy": 0.0,
+        "time_seconds": 12.2,
+        "times_player_died": 0,
+        "times_hit": 10,
+        "level_passed": 1
+      }
+    },
+    {
+      "level": 15,
+      "passed": false,
+      "performance": 0.05,
+      "stats": {
+        "level": 15,
+        "enemies_spawned": 3,
+        "enemies_killed": 1,
+        "player_damage_received": 100.8,
+        "player_health_remaining": 0,
+        "player_attacks": 0,
+        "player_hits": 11,
+        "player_accuracy": 0.0,
+        "time_seconds": 16.42,
+        "times_player_died": 1,
+        "times_hit": 19,
+        "level_passed": 0
+      }
+    },
+    {
+      "level": 15,
+      "passed": false,
+      "performance": 0.05,
+      "stats": {
+        "level": 15,
+        "enemies_spawned": 3,
+        "enemies_killed": 1,
+        "player_damage_received": 100.8,
+        "player_health_remaining": 0,
+        "player_attacks": 0,
+        "player_hits": 11,
+        "player_accuracy": 0.0,
+        "time_seconds": 16.42,
+        "times_player_died": 1,
+        "times_hit": 19,
+        "level_passed": 0
+      }
+    },
+    {
+      "level": 15,
+      "passed": false,
+      "performance": 0.05,
+      "stats": {
+        "level": 15,
+        "enemies_spawned": 3,
+        "enemies_killed": 0,
+        "player_damage_received": 103.2,
+        "player_health_remaining": 0,
+        "player_attacks": 0,
+        "player_hits": 4,
+        "player_accuracy": 0.0,
+        "time_seconds": 7.36,
+        "times_player_died": 1,
+        "times_hit": 12,
+        "level_passed": 0
+      }
+    },
+    {
+      "level": 15,
+      "passed": false,
+      "performance": 0.05,
+      "stats": {
+        "level": 15,
+        "enemies_spawned": 3,
+        "enemies_killed": 0,
+        "player_damage_received": 103.2,
+        "player_health_remaining": 0,
+        "player_attacks": 0,
+        "player_hits": 4,
+        "player_accuracy": 0.0,
+        "time_seconds": 7.36,
+        "times_player_died": 1,
+        "times_hit": 12,
+        "level_passed": 0
+      }
+    },
+    {
+      "level": 15,
+      "passed": true,
+      "performance": 0.232,
+      "stats": {
+        "level": 15,
+        "enemies_spawned": 4,
+        "enemies_killed": 4,
+        "player_damage_received": 89.4,
+        "player_health_remaining": 10.6,
+        "player_attacks": 0,
+        "player_hits": 19,
+        "player_accuracy": 0.0,
+        "time_seconds": 19.04,
+        "times_player_died": 0,
+        "times_hit": 15,
+        "level_passed": 1
+      }
+    },
+    {
+      "level": 16,
+      "passed": true,
+      "performance": 0.381,
+      "stats": {
+        "level": 16,
+        "enemies_spawned": 3,
+        "enemies_killed": 3,
+        "player_damage_received": 39.6,
+        "player_health_remaining": 60.4,
+        "player_attacks": 0,
+        "player_hits": 15,
+        "player_accuracy": 0.0,
+        "time_seconds": 17.98,
+        "times_player_died": 0,
+        "times_hit": 6,
+        "level_passed": 1
+      }
+    },
+    {
+      "level": 17,
+      "passed": true,
+      "performance": 0.5,
+      "stats": {
+        "level": 17,
+        "enemies_spawned": 3,
+        "enemies_killed": 3,
+        "player_damage_received": 0.0,
+        "player_health_remaining": 100,
+        "player_attacks": 0,
+        "player_hits": 13,
+        "player_accuracy": 0.0,
+        "time_seconds": 17.83,
+        "times_player_died": 0,
+        "times_hit": 0,
+        "level_passed": 1
+      }
+    },
+    {
+      "level": 18,
+      "passed": true,
+      "performance": 0.308,
+      "stats": {
+        "level": 18,
+        "enemies_spawned": 2,
+        "enemies_killed": 2,
+        "player_damage_received": 64.0,
+        "player_health_remaining": 36.0,
+        "player_attacks": 0,
+        "player_hits": 11,
+        "player_accuracy": 0.0,
+        "time_seconds": 26.56,
+        "times_player_died": 0,
+        "times_hit": 11,
+        "level_passed": 1
+      }
+    },
+    {
+      "level": 19,
+      "passed": false,
+      "performance": 0.05,
+      "stats": {
+        "level": 19,
+        "enemies_spawned": 3,
+        "enemies_killed": 2,
+        "player_damage_received": 102.4,
+        "player_health_remaining": 0,
+        "player_attacks": 0,
+        "player_hits": 17,
+        "player_accuracy": 0.0,
+        "time_seconds": 15.24,
+        "times_player_died": 1,
+        "times_hit": 16,
+        "level_passed": 0
+      }
+    },
+    {
+      "level": 19,
+      "passed": false,
+      "performance": 0.05,
+      "stats": {
+        "level": 19,
+        "enemies_spawned": 3,
+        "enemies_killed": 2,
+        "player_damage_received": 102.4,
+        "player_health_remaining": 0,
+        "player_attacks": 0,
+        "player_hits": 17,
+        "player_accuracy": 0.0,
+        "time_seconds": 15.24,
+        "times_player_died": 1,
+        "times_hit": 16,
+        "level_passed": 0
+      }
+    },
+    {
+      "level": 19,
+      "passed": true,
+      "performance": 0.268,
+      "stats": {
+        "level": 19,
+        "enemies_spawned": 4,
+        "enemies_killed": 4,
+        "player_damage_received": 77.4,
+        "player_health_remaining": 22.6,
+        "player_attacks": 0,
+        "player_hits": 26,
+        "player_accuracy": 0.0,
+        "time_seconds": 14.06,
+        "times_player_died": 0,
+        "times_hit": 9,
+        "level_passed": 1
+      }
+    },
+    {
+      "level": 20,
+      "passed": true,
+      "performance": 0.5,
+      "stats": {
+        "level": 20,
+        "enemies_spawned": 3,
+        "enemies_killed": 3,
+        "player_damage_received": 0.0,
+        "player_health_remaining": 100,
+        "player_attacks": 0,
+        "player_hits": 14,
+        "player_accuracy": 0.0,
+        "time_seconds": 15.62,
+        "times_player_died": 0,
+        "times_hit": 0,
+        "level_passed": 1
+      }
+    },
+    {
+      "level": 21,
+      "passed": true,
+      "performance": 0.44,
+      "stats": {
+        "level": 21,
+        "enemies_spawned": 2,
+        "enemies_killed": 2,
+        "player_damage_received": 20.0,
+        "player_health_remaining": 80.0,
+        "player_attacks": 0,
+        "player_hits": 9,
+        "player_accuracy": 0.0,
+        "time_seconds": 8.08,
+        "times_player_died": 0,
+        "times_hit": 5,
+        "level_passed": 1
+      }
+    },
+    {
+      "level": 22,
+      "passed": true,
+      "performance": 0.488,
+      "stats": {
+        "level": 22,
+        "enemies_spawned": 3,
+        "enemies_killed": 3,
+        "player_damage_received": 4.0,
+        "player_health_remaining": 96.0,
+        "player_attacks": 0,
+        "player_hits": 18,
+        "player_accuracy": 0.0,
+        "time_seconds": 11.53,
+        "times_player_died": 0,
+        "times_hit": 1,
+        "level_passed": 1
+      }
+    },
+    {
+      "level": 23,
+      "passed": true,
+      "performance": 0.5,
+      "stats": {
+        "level": 23,
+        "enemies_spawned": 3,
+        "enemies_killed": 3,
+        "player_damage_received": 0.0,
+        "player_health_remaining": 100,
+        "player_attacks": 0,
+        "player_hits": 16,
+        "player_accuracy": 0.0,
+        "time_seconds": 19.72,
+        "times_player_died": 0,
+        "times_hit": 0,
+        "level_passed": 1
+      }
+    },
+    {
+      "level": 24,
+      "passed": true,
+      "performance": 0.5,
+      "stats": {
+        "level": 24,
+        "enemies_spawned": 2,
+        "enemies_killed": 2,
+        "player_damage_received": 0.0,
+        "player_health_remaining": 100,
+        "player_attacks": 0,
+        "player_hits": 10,
+        "player_accuracy": 0.0,
+        "time_seconds": 6.91,
+        "times_player_died": 0,
+        "times_hit": 0,
+        "level_passed": 1
+      }
+    },
+    {
+      "level": 25,
+      "passed": true,
+      "performance": 0.416,
+      "stats": {
+        "level": 25,
+        "enemies_spawned": 3,
+        "enemies_killed": 3,
+        "player_damage_received": 28.0,
+        "player_health_remaining": 72.0,
+        "player_attacks": 0,
+        "player_hits": 14,
+        "player_accuracy": 0.0,
+        "time_seconds": 21.87,
+        "times_player_died": 0,
+        "times_hit": 7,
+        "level_passed": 1
+      }
+    }
+  ],
+  "last_stats": {
+    "level": 25,
+    "enemies_spawned": 3,
+    "enemies_killed": 3,
+    "player_damage_received": 28.0,
+    "player_health_remaining": 72.0,
+    "player_attacks": 0,
+    "player_hits": 14,
+    "player_accuracy": 0.0,
+    "time_seconds": 21.87,
+    "times_player_died": 0,
+    "times_hit": 7,
+    "level_passed": 1
+  }
+}

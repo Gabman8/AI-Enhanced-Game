@@ -82,7 +82,7 @@ class MainMenu:
             text = self._body_font.render(line, True, (235, 239, 245))
             self.screen.blit(text, (panel_rect.x + 24, panel_rect.y + 70 + index * 34))
 
-    def create_menu(self, event, has_active_game=False, paused=False):
+    def create_menu(self, event, has_active_game=False, paused=False, music_enabled=True):
         action = None
         background = self._prepare_background()
         if background is not None:
@@ -136,6 +136,19 @@ class MainMenu:
             self._draw_button(label, rect, hovered, accent, secondary=name != "primary")
             self._button_rects[button_action] = rect
             button_y += 92
+
+        # Music toggle button
+        music_label = "Music: ON" if music_enabled else "Music: OFF"
+        music_rect = self.pygame.Rect(left_panel.x + 44, button_y, 155, 72)
+        music_hovered = music_rect.collidepoint(mouse_pos)
+        self._draw_button(music_label, music_rect, music_hovered, (40, 120, 180), secondary=True)
+        self._button_rects["toggle_music"] = music_rect
+
+        # Reset difficulty button
+        reset_rect = self.pygame.Rect(left_panel.x + 219, button_y, 155, 72)
+        reset_hovered = reset_rect.collidepoint(mouse_pos)
+        self._draw_button("Reset Diff.", reset_rect, reset_hovered, (160, 60, 60), secondary=True)
+        self._button_rects["reset_difficulty"] = reset_rect
 
         tip = self._small_font.render("Click a button or press Enter to continue.", True, (205, 214, 224))
         self.screen.blit(tip, (left_panel.x + 44, left_panel.bottom - 60))

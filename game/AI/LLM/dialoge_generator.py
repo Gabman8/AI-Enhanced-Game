@@ -1,8 +1,15 @@
 import threading
 import queue
+import re
 from dataclasses import dataclass
 from typing import Optional
-from llama_cpp import Llama
+
+try:
+    from llama_cpp import Llama
+    _LLAMA_AVAILABLE = True
+except ImportError:
+    _LLAMA_AVAILABLE = False
+    Llama = None
  
 @dataclass
 class DialogueContext:
@@ -37,9 +44,11 @@ class LocalDialogueLLM:
         n_threads=4,
         n_gpu_layers=0,   
         max_tokens=20,
-        temperature=0.5,
+        temperature=0.7,
         cache_size=256,
     ):
+        if not _LLAMA_AVAILABLE:
+            raise RuntimeError("llama_cpp is not installed")
         self.llm = Llama(
             model_path=str(model_path),
             n_ctx=n_ctx,
@@ -64,25 +73,36 @@ class LocalDialogueLLM:
         )"""
  
     def _build_prompt(self, ctx: DialogueContext):
+        emotion = (ctx.category or "neutral").lower()
         
-        tone = (ctx.category or "neutral").replace("_", " ")
+        # Tailor tone to current emotion
+        if emotion == "afraid":
+            tone_desc = "aterrorizado y huyendo desesperadamente, con miedo a morir"
+        elif emotion == "angry":
+            tone_desc = "furioso y agresivo, cargando al ataque"
+        elif emotion == "confident":
+            tone_desc = "confiado y dominante, burlándote de tu enemigo"
+        elif emotion == "calm":
+            tone_desc = "frío y calculador, completamente concentrado"
+        else:
+            tone_desc = f"{ctx.personality} y listo para pelear"
+        
         return (
-            f"Yoy are a {ctx.personality} person interacting with other in a videogame\n"
-            f"Emotional state -> anger: {ctx.anger:.2f}, "
-            f"fear: {ctx.fear:.2f}, confidence: {ctx.confidence:.2f}.\n"
-            f"Situation tone: {tone}.\n"
-            f"Say ONE short battle line, maximum 10 words. "
-            f"No quotes, no explanations, no stage directions.\n"
-            f"Line:"
+            f"Eres un guerrero {tone_desc}.\n"
+            f"Di UNA frase corta de batalla en ESPAÑOL que refleje tu estado emocional, máximo 8 palabras.\n"
+            f"Sin emojis, sin números, solo letras y puntuación básica.\n"
+            f"Frase:"
         )
  
     def _clean(self, text):
         text = text.strip().strip('"').strip()
         text = text.split("\n")[0]
+        # Keep Spanish characters (accents, ñ) plus basic ASCII
+        text = re.sub(r'[^\w\sáéíóúüñÁÉÍÓÚÜÑ.!?\'\-]', '', text)
         words = text.split()
-        if len(words) > 12:
-            text = " ".join(words[:12])
-        return text
+        if len(words) > 10:
+            text = " ".join(words[:10])
+        return text.strip()
  
     def generate_for_context(self, ctx: DialogueContext) -> str:
         """key = self._cache_key(ctx)
@@ -130,9 +150,19 @@ class AsyncDialogueLLM:
         self._worker = threading.Thread(target=self._run, daemon=True)
         self._worker.start()
  
-    def request(self, character_id, ctx: DialogueContext):
+    def request(self, character_id, ctx):
+        # Accept either a DialogueContext dataclass or a plain dict
+        if isinstance(ctx, dict):
+            ctx = DialogueContext(
+                enemy_type=ctx.get("enemy_type", "unknown"),
+                personality=ctx.get("personality", "neutral"),
+                anger=float(ctx.get("anger", 0.5)),
+                fear=float(ctx.get("fear", 0.2)),
+                confidence=float(ctx.get("confidence", 0.5)),
+                category=ctx.get("category"),
+            )
         if character_id in self._pending:
-            return  # ya hay una petición en curso para este enemigo, no dupliques
+            return
         self._pending.add(character_id)
         self._requests.put((character_id, ctx))
  

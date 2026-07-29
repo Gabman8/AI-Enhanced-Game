@@ -8,7 +8,7 @@ GAME_ROOT = Path(__file__).resolve().parent.parent
 
 class Game:
     ATTACK_DISTANCE = 200
-    SPAWN_INTERVAL = 1.35
+    SPAWN_INTERVAL = 3
     SPAWN_INTERVAL_VARIANCE = 0.25
     SPAWN_OFFSCREEN_MARGIN = 150     
     SCREEN_ENTRY_MARGIN = 150        
@@ -23,7 +23,9 @@ class Game:
             delta_time,
             direction,
             decision_manager,
-            dialogue_generator_async
+            dialogue_generator_async,
+            level=1,
+            difficulty_adjuster=None,
     ):  
 
         self.dialogue_box = DialogueBox()
@@ -34,6 +36,8 @@ class Game:
         self.dialogue_generator_async = dialogue_generator_async
         self.main_character = get_main_character()
         self.enemies = enemies
+        self.level = level
+        self.difficulty_adjuster = difficulty_adjuster
         self.level_over = False
         self.background_image = background_image
         self._prepared_background_source = None
@@ -42,7 +46,7 @@ class Game:
         self.direction = direction
         self.jump_velocity = 700
         self.gravity = 1000
-        self.ground_y = self.screen.get_height() - 520
+        self.ground_y = self.screen.get_height() - 80 # feet land here
         self.auto_mode = False
         #DIALOGUE
         self._prepared_dialogue_box = None
@@ -53,9 +57,18 @@ class Game:
         self.vertical_velocity = 0
         self.return_to_menu_requested = False
 
-        
+        self.level_time = 0.0
+        self.level_metrics = {
+            "level": self.level,
+            "enemies_spawned": 0,
+            "enemies_killed": 0,
+            "player_attacks": 0,
+            "player_hits": 0,
+        }
+
         if self.main_character is not None:
             self.main_character.y = self.ground_y
+            self.main_character._death_counted = False
         self._spawn_queue = list(self.enemies)
         self._spawn_timer = 0.35
 
@@ -93,6 +106,7 @@ class Game:
         enemy.entered_screen = False
         enemy.facing_right = False
         enemy.set_running(True)
+        self.level_metrics["enemies_spawned"] += 1
 
     def _update_entering_enemy(self, enemy):
         """Enemigo ya soltado pero todavía corriendo hacia dentro de pantalla.
@@ -194,23 +208,28 @@ class Game:
     # COLLISION
     ##################################################
     def _resolve_collision(self, first, second):
-
+        # Dead enemies don't collide
         if first.dead or second.dead:
             return
+        
         rect1 = first.get_body_rect()
         rect2 = second.get_body_rect()
         if not rect1.colliderect(rect2):
             return
-        overlap = rect1.clip(rect2)
-        if overlap.width <= 0:
-            return
-        push = overlap.width / 2
-        if rect1.centerx < rect2.centerx:
-            first.x -= push
-            second.x += push
-        else:
-            first.x += push
-            second.x -= push
+        
+        # Only push player if other is enemy
+        if first is self.main_character:
+            # Push player back slightly
+            if rect1.centerx < rect2.centerx:
+                first.x -= 5
+            else:
+                first.x += 5
+        elif second is self.main_character:
+            # Push enemy back
+            if rect1.centerx < rect2.centerx:
+                second.x += 5
+            else:
+                second.x -= 5
     ##################################################
     # PLAYER
     ##################################################
@@ -288,6 +307,16 @@ class Game:
 
     def _predict_action(self, character):
         distance = character.distance_to(self.main_character)
+        
+        # Override emotion based on health - low health = fear
+        health_ratio = character.health / character.max_health if character.max_health > 0 else 1.0
+        if health_ratio < 0.3:  # Below 30% health
+            emotion_override = "afraid"
+        elif health_ratio < 0.6:  # Below 60% health
+            emotion_override = "angry"
+        else:
+            emotion_override = None
+        
         features = {
             "enemy_type": character.type,
             "enemy_personality": character.personality,
@@ -316,26 +345,58 @@ class Game:
             "player_facing_right": self.main_character.facing_right,
             "player_animation_state": self.main_character.animation_state,
             "distance": distance,
-            "player_is_right": self.main_character.facing_right,
+            "player_is_right": int(self.main_character.x > character.x),
         }
 
         prediction = self.decision_manager.model.predict(features)
         decision = prediction.decision
-        character.emotion = prediction.emotion
+        emotion = emotion_override if emotion_override else prediction.emotion
+
+        # Update emotions and apply changes
+        character.emotion = emotion
         character.calculate_emotions()
+
+        # Emotion overrides action — afraid = flee, angry = attack or charge
+        player_is_right = int(self.main_character.x > character.x)
+        if emotion == "afraid":
+            # Run away from player
+            decision = "MOVE_LEFT" if player_is_right else "MOVE_RIGHT"
+        elif emotion == "angry" and distance > self.ATTACK_DISTANCE * 0.6:
+            # Charge toward player
+            decision = "MOVE_RIGHT" if player_is_right else "MOVE_LEFT"
+
+        # DEBUG: Log state changes
+        if not getattr(character, '_last_logged_emotion', None) or character._last_logged_emotion != emotion:
+            print(f"[{character.type}] Health: {character.health:.1f}/{character.max_health} ({health_ratio*100:.0f}%) | Emotion: {emotion} | Action: {decision}")
+            character._last_logged_emotion = emotion
+
         return decision
     def _generate_dialogue(self, character, category=None):
         if self.dialogue_generator_async is None:
             return
 
+        # Only request dialogue if none is pending
+        if getattr(character, '_dialogue_pending', False):
+            return
+
+        # Separate dialogue timer — much less frequent than decision timer
+        now = getattr(self, '_dialogue_clock', 0)
+        last = getattr(character, '_last_dialogue_time', -999)
+        if now - last < 2.5:  # at most every 1.5 seconds per enemy
+            return
+        character._last_dialogue_time = now
+
+        # Pass current emotion so LLM generates matching dialogue
         context = {
             "enemy_type": character.type,
             "personality": character.personality,
+            "emotion": character.emotion or "neutral",
             "anger": character.anger,
             "fear": character.fear,
             "confidence": character.confidence,
-            "category": category,
+            "category": character.emotion or category,
         }
+        character._dialogue_pending = True
         self.dialogue_generator_async.request(character.id, context)
 
     def _poll_dialogue(self, character):
@@ -346,6 +407,7 @@ class Game:
             character.current_line = line
             character.show_dialogue = True
             character.line_timer = 3
+            character._dialogue_pending = False
     def _execute_action(self, character, action):
 
         if action == "MOVE_RIGHT":
@@ -362,8 +424,13 @@ class Game:
             character.facing_right = False
             character.set_running(True)
             character.last_action = action
-
+        elif action == "IDLE" or action is None:
+            character.stop()
+            character.set_running(False)
+            character.last_action = action
         elif action == "ATTACK":
+            if character is self.main_character and not character.attacking:
+                self.level_metrics["player_attacks"] += 1
             if not character.attacking:
                 body = character.get_body_rect()
                 player = self.main_character.get_body_rect()
@@ -477,6 +544,12 @@ class Game:
                 attacker.punching_damage
             )
             attacker.damage_done = True
+            if attacker is self.main_character:
+                self.level_metrics["player_hits"] += 1
+            if victim is not self.main_character and victim.dead:
+                if not getattr(victim, "_killed_counted", False):
+                    self.level_metrics["enemies_killed"] += 1
+                    victim._killed_counted = True
     ##################################################
     # DRAW
     ##################################################
@@ -494,18 +567,19 @@ class Game:
         if image is None:
             return
 
-        if not character.facing_right:
+        # Use locked death direction, never flip a dead character
+        if character.dead:
+            flip = not getattr(character, '_death_facing_right', character.facing_right)
+        else:
+            flip = not character.facing_right
 
-            image = self.game.transform.flip(
-                image,
-                True,
-                False
-            )
+        if flip:
+            image = self.game.transform.flip(image, True, False)
 
-        self.screen.blit(
-            image,
-            (character.x, character.y)
-        )
+        # y is always the feet position — draw sprite above it
+        draw_y = character.y - image.get_height()
+
+        self.screen.blit(image, (character.x, draw_y))
 
     def _health_ratio(self, character):
         if not character.max_health:
@@ -553,7 +627,9 @@ class Game:
     def _draw_enemy_health_bar(self, enemy):
         width, height = 80, 10
         x = enemy.x + (self._character_width(enemy) - width) // 2
-        y = enemy.y - 20
+        img = enemy.get_current_image()
+        sprite_top = enemy.y - (img.get_height() if img else 340)
+        y = sprite_top - 16
         ratio = self._health_ratio(enemy)
         self._draw_health_bar(x, y, width, height, ratio, border=1)
 
@@ -566,25 +642,21 @@ class Game:
         rect = surface.get_rect(midbottom=(center_x, anchor_y))
         self.screen.blit(surface, rect)
     def _draw_enemy_overlay(self, enemy):
+        img = enemy.get_current_image()
+        sprite_top = enemy.y - (img.get_height() if img else 340)
+        # 1) health bar just above sprite top
         self._draw_enemy_health_bar(enemy)
-        self._draw_emotion(
-            enemy,
-            enemy.y - 24
-        )
-        self.dialogue_box.draw(
-            self.screen,
-            enemy
-        )
+        # 2) emotion label just above health bar
+        self._draw_emotion(enemy, sprite_top - 30)
+        # 3) dialogue box above emotion
+        self.dialogue_box.draw(self.screen, enemy)
+
     def _draw_main_character_overlay(self):
         self._draw_main_character_health_bar()
-        self._draw_emotion(
-            self.main_character,
-            self.main_character.y - 10
-        )
-        self.dialogue_box.draw(
-            self.screen,
-            self.main_character
-        )
+        img = self.main_character.get_current_image()
+        sprite_top = self.main_character.y - (img.get_height() if img else 340)
+        self._draw_emotion(self.main_character, sprite_top - 30)
+        self.dialogue_box.draw(self.screen, self.main_character)
 
     def _draw_controls_overlay(self):
         font = self._get_font("_controls_font", 18, bold=False)
@@ -627,6 +699,17 @@ class Game:
 
         self._clamp_to_screen(self.main_character)
         self._update_enemies()
+        self._dialogue_clock = getattr(self, '_dialogue_clock', 0) + self.delta_time
+        
+        # Update physics and remove dead enemies
+        for enemy in self.enemies:
+            if enemy.dead:
+                enemy.update_physics(self.delta_time, self.ground_y)
+        
+        # Remove enemies marked for removal
+        self.enemies = [e for e in self.enemies if not e.should_remove]
+        
+        self.level_time += self.delta_time
         self._draw_character(self.main_character)
         self._draw_main_character_overlay()
         self._draw_controls_overlay()
@@ -644,3 +727,21 @@ class Game:
 
         if self.main_character.dead:
             self.level_over = True
+
+    def get_level_statistics(self):
+        attacks = self.level_metrics["player_attacks"]
+        hits = self.level_metrics["player_hits"]
+        return {
+            "level": self.level,
+            "enemies_spawned": self.level_metrics["enemies_spawned"],
+            "enemies_killed": self.level_metrics["enemies_killed"],
+            "player_damage_received": round(self.main_character.damage_received, 2),
+            "player_health_remaining": round(self.main_character.health, 2),
+            "player_attacks": attacks,
+            "player_hits": hits,
+            "player_accuracy": round(hits / attacks if attacks else 0.0, 3),
+            "time_seconds": round(self.level_time, 2),
+            "times_player_died": int(self.main_character.dead),
+            "times_hit": self.main_character.times_hit,
+            "level_passed": int(not self.main_character.dead),
+        }

@@ -64,7 +64,10 @@ class DialogueBox:
             + character.get_current_image().get_width() // 2
             - width // 2
         )
-        y = character.y - height - 35
+        # y is feet position; place box above sprite top with room for health+emotion below
+        img = character.get_current_image()
+        sprite_top = character.y - (img.get_height() if img else 340)
+        y = sprite_top - height - 58  # 58px gap: emotion(18) + health bar(10) + margins
         pygame.draw.rect(
              screen,
             self.BACKGROUND,

@@ -1,10 +1,8 @@
 from pathlib import Path
 
 import joblib
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-
 from sklearn.compose import ColumnTransformer
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.impute import SimpleImputer
@@ -18,7 +16,7 @@ from sklearn.model_selection import GridSearchCV, cross_val_score, train_test_sp
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder
 
-BASE_DIR = Path(__file__).resolve().parent
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 DATA_PATH = BASE_DIR / "datasets" / "dataset_enemies_ml.csv"
 MODEL_PATH = BASE_DIR / "models" / "enemies.pkl"
@@ -130,9 +128,9 @@ def combined_accuracy(y_true, y_pred):
 combined_scorer = make_scorer(combined_accuracy)
 
 param_grid = {
-    "classifier__n_estimators": [100, 200],
-    "classifier__max_depth": [10, 20, None],
-    "classifier__min_samples_split": [2, 5],
+    "classifier__n_estimators": [200],
+    "classifier__max_depth": [20],
+    "classifier__min_samples_split": [2],
 }
 
 grid = GridSearchCV(
