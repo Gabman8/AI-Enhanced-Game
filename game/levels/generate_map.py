@@ -1,5 +1,6 @@
 import random
 
+# Generate map for the current workflow.
 def generate_map(duration, dificulty, level=1):
     # Random background selection from available options
     backgrounds = [

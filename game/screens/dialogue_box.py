@@ -12,6 +12,7 @@ class DialogueBox:
 
     BORDER_RADIUS = 12
 
+    # Initialize the DialogueBox instance with its runtime state.
     def __init__(self):
 
         self.font = pygame.font.SysFont(
@@ -22,6 +23,7 @@ class DialogueBox:
 
     #######################################################
 
+    # Wrap text so it fits the current layout.
     def _wrap_text(self, text):
 
         words = text.split()
@@ -43,6 +45,7 @@ class DialogueBox:
 
     #######################################################
 
+    # Draw the relevant data on the current screen or surface.
     def draw(self, screen, character):
 
         if not character.show_dialogue:

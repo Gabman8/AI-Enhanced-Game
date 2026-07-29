@@ -2,6 +2,7 @@ import uuid
 import pygame
 class Character:
 
+    # Initialize the Character instance with its runtime state.
     def __init__(
             self,
             name,
@@ -24,14 +25,25 @@ class Character:
             regular_speed=220,
             sprinting_speed = 450,
             running=False,
-            jumping=False
+            jumping=False,
+            display_name=None,
+            dialogue_style=None,
+            attack_cooldown=0.3,
+            decision_interval=0.8,
+            never_flee=False,
+            persists_on_death=False,
+            intro_line=None,
+            entrance_announcement=None,
+            death_line=None,
     ):
         self.id = uuid.uuid4()
         # Información
         self.name = name
+        self.display_name = display_name or name
         self.type = type
         self.abilities = abilities
         self.personality = personality
+        self.dialogue_style = dialogue_style or personality
         self.emotion = emotion
         self.last_action = None
         self.anger = anger
@@ -42,10 +54,17 @@ class Character:
         self.damage_received = 0.0
         self.confidence = confidence
         self.decide_action = False
+        self.never_flee = never_flee
+        self.persists_on_death = persists_on_death
+        self.intro_line = intro_line
+        self.entrance_announcement = entrance_announcement
+        self.death_line = death_line
+        self.action_lock_timer = 0
+        self.is_final_boss = type == "final_boss"
 
         self.current_action = "IDLE"
         self.decision_timer = 0
-        self.decision_interval = 0.8  # Faster decision making for emotion changes
+        self.decision_interval = decision_interval
         # Estadísticas
         self.health = health
         self.max_health = health
@@ -83,7 +102,7 @@ class Character:
         self.show_dialogue = False
 
         # COMBATE
-        self.attack_cooldown = 0.3
+        self.attack_cooldown = attack_cooldown
         self.attack_timer = 0
 
         self.attack_duration = 0.2
@@ -111,6 +130,7 @@ class Character:
     # IMAGES
     #########################################################
 
+    # Handle as frame list for the current workflow.
     def _as_frame_list(self, images):
 
         if images is None:
@@ -120,6 +140,7 @@ class Character:
             return list(images)
 
         return [images]
+    # Update status timers for the current frame or state.
     def update_status_timers(self, delta):
 
         if self.show_dialogue:
@@ -132,17 +153,21 @@ class Character:
             self.emotion_timer -= delta
             if self.emotion_timer <= 0:
                 self.show_emotion = False
+
+        if self.action_lock_timer > 0:
+            self.action_lock_timer = max(0, self.action_lock_timer - delta)
         
         # Death timer: enemies fade out after 2 seconds
         if self.dead:
             self.death_timer += delta
-            if self.death_timer > 2.0:
+            if not self.persists_on_death and self.death_timer > 2.0:
                 self.should_remove = True
 
     #########################################################
     # MOVEMENT
     #########################################################
 
+    # Move left according to the current rules.
     def move_left(self, delta_time):
 
         if self.dead:
@@ -155,6 +180,7 @@ class Character:
         if not self.attacking:
             self.set_animation("running")
 
+    # Move right according to the current rules.
     def move_right(self, delta_time):
 
         if self.dead:
@@ -167,6 +193,7 @@ class Character:
         if not self.attacking:
             self.set_animation("running")
 
+    # Handle stop for the current workflow.
     def stop(self):
 
         if self.dead:
@@ -181,6 +208,7 @@ class Character:
     # COMBAT
     #########################################################
 
+    # Handle attack for the current workflow.
     def attack(self):
         if self.dead:
             return
@@ -192,6 +220,7 @@ class Character:
         self.damage_done = False
         self.set_animation("attack")
 
+    # Handle receive damage for the current workflow.
     def receive_damage(self, damage):
         if self.dead:
             return
@@ -204,6 +233,7 @@ class Character:
             self.health = 0
             self.die()
 
+    # Handle die for the current workflow.
     def die(self):
 
         if self.dead:
@@ -216,8 +246,13 @@ class Character:
         self.death_timer = 0
         # Lock facing direction at death — don't flip while falling
         self._death_facing_right = self.facing_right
+        if self.death_line:
+            self.current_line = self.death_line
+            self.show_dialogue = True
+            self.line_timer = 2.4
         self.set_animation("death")
         
+    # Update physics for the current frame or state.
     def update_physics(self, delta_time, ground_y):
         if self.falling:
             self.vertical_velocity += 1400 * delta_time
@@ -226,6 +261,7 @@ class Character:
             if self.y >= ground_y:
                 self.y = ground_y
                 self.falling = False
+    # Update attack for the current frame or state.
     def update_attack(self, delta):
         if self.attack_timer > 0:
             self.attack_timer = max(
@@ -236,6 +272,7 @@ class Character:
     # ANIMATIONS
     #########################################################
 
+    # Set animation on the current object.
     def set_animation(self, state):
 
         if state == self.animation_state:
@@ -245,6 +282,7 @@ class Character:
         self.animation_frame = 0
         self.animation_timer = 0
  
+    # Return animation frames for the current flow.
     def get_animation_frames(self):
 
         if self.animation_state == "attack":
@@ -261,6 +299,7 @@ class Character:
 
         return []
 
+    # Update animation for the current frame or state.
     def update_animation(self, delta_time):
         frames = self.get_animation_frames()
         if not frames:
@@ -295,6 +334,7 @@ class Character:
                 return
 
             self.animation_frame %= len(frames)
+    # Return current image for the current flow.
     def get_current_image(self):
         frames = self.get_animation_frames()
 
@@ -310,6 +350,7 @@ class Character:
     #########################################################
     # EMOTIONS
     #########################################################
+    # Calculate emotions from the current values.
     def calculate_emotions(self):
         """Apply emotion-based adjustments to emotional stats."""
         self.show_emotion = True
@@ -345,6 +386,7 @@ class Character:
     #########################################################
     # HITBOX
     #########################################################
+    # Return body rect for the current flow.
     def get_body_rect(self):
         image = self.get_current_image()
         if image is None:
@@ -359,32 +401,36 @@ class Character:
             width - margin_x * 2,
             height
     )
+    # Return attack rect for the current flow.
     def get_attack_rect(self):
 
         body = self.get_body_rect()
-        attack_width = 60
+        attack_width = 110
         if self.facing_right:
             return pygame.Rect(
                 body.right,
-                body.y + 25,
+                body.y + 18,
                 attack_width,
-                body.height - 50
+                body.height - 36
             )
         return pygame.Rect(
             body.left - attack_width,
-            body.y + 25,
+            body.y + 18,
             attack_width,
-            body.height - 50
+            body.height - 36
         )
     #########################################################
     # UTILS
     #########################################################
 
+    # Handle distance to for the current workflow.
     def distance_to(self, character):
         return abs(self.x - character.x)
+    # Increase emotion by the requested amount.
     def increment_emotion(self,emotion, quantity):
         emotion += quantity
         return emotion
+    # Decrease emotion by the requested amount.
     def decrement_emotion(self,emotion, quantity):
         emotion -= quantity
         return emotion
@@ -392,20 +438,26 @@ class Character:
     # SETTERS
     #########################################################
 
+    # Set health on the current object.
     def set_health(self, health):
         self.health = health
 
+    # Set strength on the current object.
     def set_strength(self, strength):
         self.strength = strength
 
+    # Set speed on the current object.
     def set_speed(self, speed):
         self.speed = speed
 
+    # Set running on the current object.
     def set_running(self, running):
         self.running = running
 
+    # Set jumping on the current object.
     def set_jumping(self, jumping):
         self.jumping = jumping
 
+    # Set attacking on the current object.
     def set_attacking(self, attacking):
         self.attacking = attacking

@@ -26,6 +26,7 @@ SPRITE_SHEETS = {
 }
 
 
+# Remove background from the current data.
 def _remove_background(image_path, output_path):
     img = cv2.imread(str(image_path), cv2.IMREAD_UNCHANGED)
     if img is None:
@@ -69,6 +70,7 @@ def _remove_background(image_path, output_path):
 
     cv2.imwrite(str(output_path), img)
 
+# Trim transparent pixels to the meaningful visible area.
 def _trim_transparent_pixels(sprite):
     alpha = sprite[:, :, 3]
     points = cv2.findNonZero((alpha > ALPHA_THRESHOLD).astype(np.uint8))
@@ -79,6 +81,7 @@ def _trim_transparent_pixels(sprite):
     return sprite[y : y + h, x : x + w]
 
 
+# Find sprite bounds inside the current data.
 def _find_sprite_bounds(img):
     alpha = img[:, :, 3]
     mask = (alpha > ALPHA_THRESHOLD).astype(np.uint8)
@@ -103,12 +106,14 @@ def _find_sprite_bounds(img):
     return sorted(sprites, key=lambda bounds: (bounds[1], bounds[0]))
 
 
+# Clear old frames before generating fresh output.
 def _clear_old_frames(out_dir):
     out_dir.mkdir(parents=True, exist_ok=True)
     for old_frame in out_dir.glob("frame_*.png"):
         old_frame.unlink()
 
 
+# Generate sprite sheet for the current workflow.
 def generate_sprite_sheet(name, image_path, out_dir):
     if not image_path.exists():
         raise FileNotFoundError(f"Sprite sheet not found: {image_path}")
@@ -138,6 +143,7 @@ def generate_sprite_sheet(name, image_path, out_dir):
     return sprite_bounds
 
 
+# Generate sprites for the current workflow.
 def generate_sprites(sprite_sheets=None):
     sprite_sheets = sprite_sheets or SPRITE_SHEETS
     generated = {}

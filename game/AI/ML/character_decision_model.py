@@ -118,6 +118,7 @@ X_train, X_test, y_train, y_test = train_test_split(
 # =========================
 
 
+# Handle combined accuracy for the current workflow.
 def combined_accuracy(y_true, y_pred):
     y_true = np.asarray(y_true)
     y_pred = np.asarray(y_pred)

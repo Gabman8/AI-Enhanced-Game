@@ -13,22 +13,29 @@ except ImportError:
  
 @dataclass
 class DialogueContext:
+    character_name: str
     enemy_type: str
     personality: str
+    dialogue_style: str
     anger: float
     fear: float
     confidence: float
     category: Optional[str] = None 
+    is_final_boss: bool = False
  
+    # Handle from character for the current workflow.
     @classmethod
     def from_character(cls, character, category=None):
         return cls(
+            character_name=getattr(character, "display_name", character.name),
             enemy_type=character.type,
             personality=character.personality,
+            dialogue_style=getattr(character, "dialogue_style", character.personality),
             anger=character.anger,
             fear=character.fear,
             confidence=character.confidence,
             category=category,
+            is_final_boss=getattr(character, "is_final_boss", False),
         )
  
 # ------------------------------------------------------------------
@@ -37,6 +44,7 @@ class DialogueContext:
  
 class LocalDialogueLLM:
  
+    # Initialize the LocalDialogueLLM instance with its runtime state.
     def __init__(
         self,
         model_path,
@@ -72,6 +80,7 @@ class LocalDialogueLLM:
             round(ctx.confidence, 1),
         )"""
  
+    # Build prompt for the current workflow.
     def _build_prompt(self, ctx: DialogueContext):
         emotion = (ctx.category or "neutral").lower()
         
@@ -86,14 +95,27 @@ class LocalDialogueLLM:
             tone_desc = "frío y calculador, completamente concentrado"
         else:
             tone_desc = f"{ctx.personality} y listo para pelear"
+
+        if ctx.is_final_boss:
+            role_desc = "un jefe final inolvidable, orgulloso y amenazante"
+        elif ctx.enemy_type == "strong_enemy":
+            role_desc = "un ejecutor brutal que intimida con pocas palabras"
+        elif ctx.enemy_type == "regular_enemy":
+            role_desc = "un maton callejero insolente y sucio"
+        else:
+            role_desc = "un heroe desafiante y seguro de si mismo"
         
         return (
-            f"Eres un guerrero {tone_desc}.\n"
-            f"Di UNA frase corta de batalla en ESPAÑOL que refleje tu estado emocional, máximo 8 palabras.\n"
+            f"Eres {ctx.character_name}, {role_desc}.\n"
+            f"Tu estilo al hablar es: {ctx.dialogue_style}.\n"
+            f"Tu personalidad base es {ctx.personality} y ahora estas {tone_desc}.\n"
+            f"Di UNA frase corta de batalla en ESPAÑOL que refleje tu identidad y tu estado emocional, maximo 8 palabras.\n"
+            f"No hables como un enemigo generico: debe sonar propio de este personaje.\n"
             f"Sin emojis, sin números, solo letras y puntuación básica.\n"
             f"Frase:"
         )
  
+    # Handle clean for the current workflow.
     def _clean(self, text):
         text = text.strip().strip('"').strip()
         text = text.split("\n")[0]
@@ -104,6 +126,7 @@ class LocalDialogueLLM:
             text = " ".join(words[:10])
         return text.strip()
  
+    # Generate for context for the current workflow.
     def generate_for_context(self, ctx: DialogueContext) -> str:
         """key = self._cache_key(ctx)
         if key in self._cache:
@@ -117,6 +140,7 @@ class LocalDialogueLLM:
         self._cache[key] = line"""
         return line
 
+    # Generate raw for the current workflow.
     def _generate_raw(self, prompt: str) -> str:
         output = self.llm(
             prompt,
@@ -141,6 +165,7 @@ class AsyncDialogueLLM:
     modelos locales sin GPU).
     """
  
+    # Initialize the AsyncDialogueLLM instance with its runtime state.
     def __init__(self, local_llm: LocalDialogueLLM):
         self.local_llm = local_llm
         self._requests = queue.Queue()
@@ -150,26 +175,32 @@ class AsyncDialogueLLM:
         self._worker = threading.Thread(target=self._run, daemon=True)
         self._worker.start()
  
+    # Queue a new asynchronous request for later processing.
     def request(self, character_id, ctx):
         # Accept either a DialogueContext dataclass or a plain dict
         if isinstance(ctx, dict):
             ctx = DialogueContext(
+                character_name=ctx.get("character_name", "Combatiente"),
                 enemy_type=ctx.get("enemy_type", "unknown"),
                 personality=ctx.get("personality", "neutral"),
+                dialogue_style=ctx.get("dialogue_style", ctx.get("personality", "neutral")),
                 anger=float(ctx.get("anger", 0.5)),
                 fear=float(ctx.get("fear", 0.2)),
                 confidence=float(ctx.get("confidence", 0.5)),
                 category=ctx.get("category"),
+                is_final_boss=bool(ctx.get("is_final_boss", False)),
             )
         if character_id in self._pending:
             return
         self._pending.add(character_id)
         self._requests.put((character_id, ctx))
  
+    # Poll the latest available result without blocking the caller.
     def poll(self, character_id) -> Optional[str]:
         with self._results_lock:
             return self._results.pop(character_id, None)
  
+    # Run the internal background loop for this worker.
     def _run(self):
         while True:
             character_id, ctx = self._requests.get()

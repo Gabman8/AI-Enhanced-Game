@@ -8,10 +8,12 @@ OUTPUT_PATH = BASE_DIR / "datasets" / "dataset_level_difficulty.csv"
 NUM_SAMPLES = 12000
 
 
+# Clamp a value so it stays inside the allowed range.
 def clamp(value, low, high):
     return max(low, min(high, value))
 
 
+# Generate sample for the current workflow.
 def generate_sample(level, player_skill):
     base_difficulty = 1.0 + (level - 1) * 0.08
     performance_noise = np.random.normal(0.0, 0.08)

@@ -25,13 +25,16 @@ LEVEL_TRANSITION_DELAY = 1
 
 
 class NoopDialogueGenerator:
+    # Queue a new asynchronous request for later processing.
     def request(self, character_id, context):
         return None
 
+    # Poll the latest available result without blocking the caller.
     def poll(self, character_id):
         return None
 
 
+# Load dialogue generator from the expected source.
 def _load_dialogue_generator():
     try:
         from AI.LLM.dialoge_generator import LocalDialogueLLM, AsyncDialogueLLM
@@ -44,6 +47,7 @@ def _load_dialogue_generator():
     return NoopDialogueGenerator()
 
 
+# Load AI manager from the expected source.
 def _load_ai_manager():
     try:
         from AI.ai_manager import AIManager
@@ -59,11 +63,13 @@ _dialogue_generator = _load_dialogue_generator()
 _ai_manager = _load_ai_manager()
 
 
-def draw_loading_screen(message="Loading mission..."):
+# Draw loading screen on the current screen or surface.
+def draw_loading_screen(message="Loading mission...", level_number=1):
     SCREEN.fill((9, 14, 24))
 
     title_font = pygame.font.SysFont("Georgia", 76, bold=True)
     body_font = pygame.font.SysFont("Verdana", 26, bold=True)
+    level_font = pygame.font.SysFont("Verdana", 30, bold=True)
     hint_font = pygame.font.SysFont("Verdana", 20)
 
     card_rect = pygame.Rect(0, 0, 760, 260)
@@ -76,16 +82,19 @@ def draw_loading_screen(message="Loading mission..."):
 
     title_surface = title_font.render("Comando", True, (247, 230, 188))
     body_surface = body_font.render(message, True, (241, 241, 241))
+    level_surface = level_font.render(f"Level {max(1, int(level_number))}", True, (255, 213, 126))
     hint_surface = hint_font.render("Preparing background, characters, and enemy wave...", True, (205, 214, 224))
 
     SCREEN.blit(title_surface, title_surface.get_rect(center=(WIDTH // 2, card_rect.y + 84)))
-    SCREEN.blit(body_surface, body_surface.get_rect(center=(WIDTH // 2, card_rect.y + 154)))
-    SCREEN.blit(hint_surface, hint_surface.get_rect(center=(WIDTH // 2, card_rect.y + 208)))
+    SCREEN.blit(level_surface, level_surface.get_rect(center=(WIDTH // 2, card_rect.y + 144)))
+    SCREEN.blit(body_surface, body_surface.get_rect(center=(WIDTH // 2, card_rect.y + 184)))
+    SCREEN.blit(hint_surface, hint_surface.get_rect(center=(WIDTH // 2, card_rect.y + 222)))
     pygame.display.flip()
 
 
+# Build game session for the current workflow.
 def build_game_session(message="Loading mission...", level_number=1, previous_stats=None):
-    draw_loading_screen(message)
+    draw_loading_screen(message, level_number=level_number)
     pygame.event.pump()
 
     level = generate_level(pygame, level=level_number, previous_stats=previous_stats)
@@ -115,7 +124,6 @@ difficulty_adjuster = DifficultyAdjuster()
 current_level = difficulty_adjuster.get_current_level()
 game = build_game_session("Loading first mission...", level_number=current_level, previous_stats=difficulty_adjuster.state.get("last_stats"))
 
-levels_completed = 0
 pending_level_transition = None
 level_transition_timer = 0.0
 music_enabled = True
@@ -144,10 +152,10 @@ main_menu = MainMenu(
 )
 
 
+# Handle victory subtitle for the current workflow.
 def victory_subtitle():
-    if levels_completed == 1:
-        return "Level 1 completed - click to start the next level"
-    return f"Level {levels_completed} - click to start the next run"
+    completed_level = max(1, difficulty_adjuster.get_current_level() - 1)
+    return f"Level {completed_level} completed - click to start the next level"
 
 
 while running:
@@ -203,6 +211,12 @@ while running:
         elif action == "reset_difficulty":
             difficulty_adjuster.reset_state()
             current_level = 1
+            game = build_game_session(
+                "Loading first mission...",
+                level_number=current_level,
+                previous_stats=difficulty_adjuster.state.get("last_stats"),
+            )
+            main_menu.set_background_image(game.background_image or DEFAULT_BACKGROUND)
         elif action == "start":
             current_level = difficulty_adjuster.get_current_level()
             game = build_game_session(
@@ -249,7 +263,6 @@ while running:
                 if game.main_character.dead:
                     pending_level_transition = "Death"
                 else:
-                    levels_completed += 1
                     current_level = difficulty_adjuster.get_current_level()
                     pending_level_transition = "Victory"
                 level_transition_timer = LEVEL_TRANSITION_DELAY

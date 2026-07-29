@@ -40,10 +40,12 @@ TARGET_COLUMNS = [
 
 
 class LevelDifficultyModel:
+    # Initialize the LevelDifficultyModel instance with its runtime state.
     def __init__(self, pipeline, feature_columns):
         self.pipeline = pipeline
         self.feature_columns = feature_columns
 
+    # Predict the relevant data from the available inputs.
     def predict(self, level_statistics):
         row = pd.DataFrame([level_statistics])[self.feature_columns]
         raw_pred = self.pipeline.predict(row)[0]
@@ -57,6 +59,7 @@ class LevelDifficultyModel:
         }
 
 
+# Train level difficulty model using the available dataset.
 def train_level_difficulty_model():
     data = pd.read_csv(DATA_PATH)
 

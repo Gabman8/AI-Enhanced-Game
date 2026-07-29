@@ -18,12 +18,14 @@ IMAGES_DIR = GAME_ROOT / "images"
 # Utility helpers
 # ─────────────────────────────────────────────────────────────────────────────
 
+# Save the relevant data to the expected destination.
 def _save(img: Image.Image, path: Path):
     path.parent.mkdir(parents=True, exist_ok=True)
     img.save(str(path), "PNG")
     print(f"Saved: {path}")
 
 
+# Handle blend for the current workflow.
 def _blend(a: Image.Image, b: Image.Image, t: float) -> Image.Image:
     """Alpha-aware blend between two RGBA frames."""
     a = a.convert("RGBA")
@@ -33,6 +35,7 @@ def _blend(a: Image.Image, b: Image.Image, t: float) -> Image.Image:
     return Image.blend(a, b, t)
 
 
+# Handle shift for the current workflow.
 def _shift(img: Image.Image, dx: int, dy: int) -> Image.Image:
     """Shift image by (dx, dy), filling empty space with transparent."""
     result = Image.new("RGBA", img.size, (0, 0, 0, 0))
@@ -44,6 +47,7 @@ def _shift(img: Image.Image, dx: int, dy: int) -> Image.Image:
 # Strong enemy – frame_02  (mid-stride, between frame_00 and frame_01)
 # ─────────────────────────────────────────────────────────────────────────────
 
+# Generate strong enemy frame 02 for the current workflow.
 def generate_strong_enemy_frame_02():
     """Generate frame_02 by stretching frame_01 slightly and shifting."""
     src_dir = IMAGES_DIR / "strong_enemy" / "running"
@@ -105,6 +109,7 @@ _TRANSP     = (0, 0, 0, 0)
 W, H = 240, 340   # canvas size for final boss
 
 
+# Draw boss body on the current screen or surface.
 def _draw_boss_body(draw: ImageDraw.Draw, lean_x: int = 0, arm_raise: int = 0):
     """Draw a standing/slightly-posed final boss figure."""
     cx = W // 2 + lean_x
@@ -208,6 +213,7 @@ def _draw_boss_body(draw: ImageDraw.Draw, lean_x: int = 0, arm_raise: int = 0):
     )
 
 
+# Draw weapon on the current screen or surface.
 def _draw_weapon(draw: ImageDraw.Draw, cx: int, cy_base: int, variant: int = 0):
     """Draw a large military combat knife / machete."""
     # Handle
@@ -223,6 +229,7 @@ def _draw_weapon(draw: ImageDraw.Draw, cx: int, cy_base: int, variant: int = 0):
     draw.polygon(pts, fill=_METAL_HIGH, outline=_OUTLINE)
 
 
+# Generate final boss sprites for the current workflow.
 def generate_final_boss_sprites():
     out_base = IMAGES_DIR / "final_boss"
 

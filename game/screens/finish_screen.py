@@ -1,10 +1,12 @@
 class FinishScreen:
+    # Initialize the FinishScreen instance with its runtime state.
     def __init__(self, pygame, screen, font_size=140, subtitle_font_size=36, font_name="Courier"):
         self.pygame = pygame
         self.screen = screen
         self.font = pygame.font.SysFont(font_name, font_size, bold=True)
         self.subtitle_font = pygame.font.SysFont(font_name, subtitle_font_size, bold=False)
 
+    # Create finish screen for the current workflow.
     def create_finish_screen(
         self,
         event,

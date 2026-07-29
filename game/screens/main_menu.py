@@ -5,6 +5,7 @@ GAME_ROOT = Path(__file__).resolve().parent.parent
 
 
 class MainMenu:
+    # Initialize the MainMenu instance with its runtime state.
     def __init__(self, pygame_module, running, screen, color="Black", font_size=30, font_style="Courier", background_image=None):
         self.pygame = pygame_module
         self.running_game = running
@@ -22,11 +23,13 @@ class MainMenu:
         self._small_font = self.pygame.font.SysFont("Verdana", 18)
         self._button_rects = {}
 
+    # Set background image on the current object.
     def set_background_image(self, background_image):
         self.background_image = background_image
         self._background_cache = None
         self._background_cache_key = None
 
+    # Prepare background before it is used.
     def _prepare_background(self):
         if self.background_image is None:
             return None
@@ -45,6 +48,7 @@ class MainMenu:
         self._background_cache_key = self.background_image
         return background
 
+    # Draw button on the current screen or surface.
     def _draw_button(self, label, rect, hovered, accent, secondary=False):
         surface = self.pygame.Surface(rect.size, self.pygame.SRCALPHA)
         fill = (*accent, 245 if hovered else 210)
@@ -61,6 +65,7 @@ class MainMenu:
         text_rect = text_surface.get_rect(center=rect.center)
         self.screen.blit(text_surface, text_rect)
 
+    # Draw controls panel on the current screen or surface.
     def _draw_controls_panel(self, panel_rect):
         overlay = self.pygame.Surface(panel_rect.size, self.pygame.SRCALPHA)
         self.pygame.draw.rect(overlay, (13, 18, 28, 220), overlay.get_rect(), border_radius=28)
@@ -82,6 +87,7 @@ class MainMenu:
             text = self._body_font.render(line, True, (235, 239, 245))
             self.screen.blit(text, (panel_rect.x + 24, panel_rect.y + 70 + index * 34))
 
+    # Create menu for the current workflow.
     def create_menu(self, event, has_active_game=False, paused=False, music_enabled=True):
         action = None
         background = self._prepare_background()
