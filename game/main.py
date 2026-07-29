@@ -1,7 +1,7 @@
 import pygame
 
 from levels.generate_level import generate_level
-from screens.death_screen import DeathScreen
+from screens.finish_screen import FinishScreen
 from screens.game import Game
 from screens.main_menu import MainMenu
 
@@ -16,6 +16,7 @@ pygame.display.set_caption("Comando")
 
 FPS = 144
 DEFAULT_BACKGROUND = "backgrounds/TimesSquare_background.png"
+LEVEL_TRANSITION_DELAY = 1
 
 
 class NoopDialogueGenerator:
@@ -75,8 +76,12 @@ running = True
 state = "Menu"
 paused_from_game = False
 clock = pygame.time.Clock()
-death_screen = DeathScreen(pygame, SCREEN)
+finish_screen = FinishScreen(pygame, SCREEN)
 game = build_game_session("Loading first mission...")
+
+levels_completed = 0
+pending_level_transition = None
+level_transition_timer = 0.0
 
 main_menu = MainMenu(
     pygame,
@@ -87,6 +92,12 @@ main_menu = MainMenu(
     "Verdana",
     game.background_image or DEFAULT_BACKGROUND,
 )
+
+
+def victory_subtitle():
+    if levels_completed == 1:
+        return "Level 1 completed - click to start the next level"
+    return f"Level {levels_completed} - click to start the next run"
 
 
 while running:
@@ -105,22 +116,23 @@ while running:
             if action is not None:
                 state_action = action
         elif state == "Game":
-            result = game.handle_event(event)
-            if result == "menu":
-                pending_action = "menu"
+            if pending_level_transition is None:
+                result = game.handle_event(event)
+                if result == "menu":
+                    pending_action = "menu"
         elif state == "Death":
-            if death_screen.create_death_screen(
+            if finish_screen.create_finish_screen(
                 event,
                 title="You Died",
-                subtitle="Click to jump back into a new run",
+                subtitle="Click to retry level",
                 accent=(233, 77, 77),
             ):
                 state_action = "restart_after_death"
         elif state == "Victory":
-            if death_screen.create_death_screen(
+            if finish_screen.create_finish_screen(
                 event,
-                title="Level Cleared",
-                subtitle="Click to start the next run",
+                title="Level Completed",
+                subtitle=victory_subtitle(),
                 accent=(88, 200, 124),
             ):
                 state_action = "restart_after_victory"
@@ -137,6 +149,7 @@ while running:
             main_menu.set_background_image(game.background_image or DEFAULT_BACKGROUND)
             state = "Game"
             paused_from_game = False
+            pending_level_transition = None
         elif action == "resume" and paused_from_game:
             state = "Game"
         elif action == "restart":
@@ -144,45 +157,56 @@ while running:
             main_menu.set_background_image(game.background_image or DEFAULT_BACKGROUND)
             state = "Game"
             paused_from_game = False
+            pending_level_transition = None
         elif action == "quit":
             running = False
 
     elif state == "Game":
-        game.create_game(None, delta_time)
-        if pending_action == "menu" or game.return_to_menu_requested:
-            state = "Menu"
-            paused_from_game = True
-            game.return_to_menu_requested = False
-            main_menu.set_background_image(game.background_image or DEFAULT_BACKGROUND)
-        elif game.level_over:
-            if game.main_character.dead:
-                state = "Death"
-            else:
-                state = "Victory"
-            paused_from_game = False
+        if pending_level_transition is not None:
+            level_transition_timer -= delta_time
+            if level_transition_timer <= 0:
+                state = pending_level_transition
+                pending_level_transition = None
+        else:
+            game.create_game(None, delta_time)
+            if pending_action == "menu" or game.return_to_menu_requested:
+                state = "Menu"
+                paused_from_game = True
+                game.return_to_menu_requested = False
+                main_menu.set_background_image(game.background_image or DEFAULT_BACKGROUND)
+            elif game.level_over:
+                if game.main_character.dead:
+                    pending_level_transition = "Death"
+                else:
+                    levels_completed += 1
+                    pending_level_transition = "Victory"
+                level_transition_timer = LEVEL_TRANSITION_DELAY
+                paused_from_game = False
 
     elif state == "Death":
-        result = death_screen.create_death_screen(
+        result = finish_screen.create_finish_screen(
             None,
             title="You Died",
-            subtitle="Click to jump back into a new run",
+            subtitle="Click to retry level",
             accent=(233, 77, 77),
         )
         if state_action == "restart_after_death" or result:
             game = build_game_session("Rebuilding the street fight...")
             main_menu.set_background_image(game.background_image or DEFAULT_BACKGROUND)
             state = "Game"
+            pending_level_transition = None
 
     elif state == "Victory":
-        result = death_screen.create_death_screen(
+        result = finish_screen.create_finish_screen(
             None,
-            title="Level Cleared",
-            subtitle="Click to start the next run",
+            title="Level Completed",
+            subtitle=victory_subtitle(),
             accent=(88, 200, 124),
         )
         if state_action == "restart_after_victory" or result:
             game = build_game_session("Loading another enemy wave...")
             main_menu.set_background_image(game.background_image or DEFAULT_BACKGROUND)
             state = "Game"
+            pending_level_transition = None
 
 pygame.quit()

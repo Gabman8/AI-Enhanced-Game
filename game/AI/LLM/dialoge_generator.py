@@ -4,11 +4,6 @@ from dataclasses import dataclass
 from typing import Optional
 from llama_cpp import Llama
  
-# 1. Snapshot del estado emocional (desacopla el LLM de tu clase Character
-#    y evita pasar el objeto real entre hilos mientras se sigue mutando
-#    en el hilo principal del juego)
-# ------------------------------------------------------------------
- 
 @dataclass
 class DialogueContext:
     enemy_type: str
