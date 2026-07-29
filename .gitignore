@@ -1,1 +1,6 @@
-*[.pyc,.pkl,.gguf]
+*.pyc
+*.pkl
+*.gguf
+build/
+dist/
+*.spec

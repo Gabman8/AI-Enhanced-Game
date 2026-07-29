@@ -26,6 +26,7 @@ SPRITE_SHEETS = {
 }
 
 
+# Remove background from the current data.
 def _remove_background(image_path, output_path):
     img = cv2.imread(str(image_path), cv2.IMREAD_UNCHANGED)
     if img is None:
@@ -36,20 +37,40 @@ def _remove_background(image_path, output_path):
     elif len(img.shape) == 3 and img.shape[2] == 3:
         img = cv2.cvtColor(img, cv2.COLOR_BGR2BGRA)
 
-    # Detectar fondo blanco con tolerancia, evitando dejar un hilo blanco alrededor del sprite
+    # --- Pass 1: floodfill from every corner to catch the outer background ---
+    h, w = img.shape[:2]
+    bgr = img[:, :, :3].copy()
+    seed_mask = np.zeros((h + 2, w + 2), dtype=np.uint8)
+    corners = [(0, 0), (0, h - 1), (w - 1, 0), (w - 1, h - 1)]
+    for cx, cy in corners:
+        cv2.floodFill(
+            bgr, seed_mask,
+            seedPoint=(cx, cy),
+            newVal=(0, 255, 0),          # bright green marker
+            loDiff=(BACKGROUND_TOLERANCE,) * 3,
+            upDiff=(BACKGROUND_TOLERANCE,) * 3,
+            flags=cv2.FLOODFILL_MASK_ONLY | (255 << 8),
+        )
+    flood_mask = seed_mask[1:-1, 1:-1].copy()
+
+    # --- Pass 2: also catch any white pixel that wasn't reached by the flood ---
     lower = np.array([255 - BACKGROUND_TOLERANCE] * 3, dtype=np.uint8)
     upper = np.array([255, 255, 255], dtype=np.uint8)
-    mask = cv2.inRange(img[:, :, :3], lower, upper)
+    white_mask = cv2.inRange(img[:, :, :3], lower, upper)
 
+    combined = cv2.bitwise_or(flood_mask, white_mask)
+
+    # Small morphological cleanup to remove stray halos
     kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
-    mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
-    mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
+    combined = cv2.morphologyEx(combined, cv2.MORPH_CLOSE, kernel)
+    combined = cv2.morphologyEx(combined, cv2.MORPH_OPEN, kernel)
 
-    # Fondo transparente
-    img[:, :, 3] = 255 - mask
+    # Apply as alpha
+    img[:, :, 3] = 255 - combined
 
     cv2.imwrite(str(output_path), img)
 
+# Trim transparent pixels to the meaningful visible area.
 def _trim_transparent_pixels(sprite):
     alpha = sprite[:, :, 3]
     points = cv2.findNonZero((alpha > ALPHA_THRESHOLD).astype(np.uint8))
@@ -60,6 +81,7 @@ def _trim_transparent_pixels(sprite):
     return sprite[y : y + h, x : x + w]
 
 
+# Find sprite bounds inside the current data.
 def _find_sprite_bounds(img):
     alpha = img[:, :, 3]
     mask = (alpha > ALPHA_THRESHOLD).astype(np.uint8)
@@ -84,12 +106,14 @@ def _find_sprite_bounds(img):
     return sorted(sprites, key=lambda bounds: (bounds[1], bounds[0]))
 
 
+# Clear old frames before generating fresh output.
 def _clear_old_frames(out_dir):
     out_dir.mkdir(parents=True, exist_ok=True)
     for old_frame in out_dir.glob("frame_*.png"):
         old_frame.unlink()
 
 
+# Generate sprite sheet for the current workflow.
 def generate_sprite_sheet(name, image_path, out_dir):
     if not image_path.exists():
         raise FileNotFoundError(f"Sprite sheet not found: {image_path}")
@@ -119,6 +143,7 @@ def generate_sprite_sheet(name, image_path, out_dir):
     return sprite_bounds
 
 
+# Generate sprites for the current workflow.
 def generate_sprites(sprite_sheets=None):
     sprite_sheets = sprite_sheets or SPRITE_SHEETS
     generated = {}
