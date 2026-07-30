@@ -91,6 +91,20 @@ pip install -r requirements.txt
 
 See [LLM Model Installation (REQUIRED)](#llm-model-installation-required)
 
+### Step 6: Train Enemy Decision + Emotion ML Model (MANDATORY ⚠️)
+
+Before launching the game, you **must** train the enemy behavior model:
+
+```bash
+python game/AI/ML/character_decision_model.py
+```
+
+This generates:
+
+- `game/AI/models/enemies.pkl`
+
+Without this file, enemy AI decision/emotion inference may fail or fallback behavior may be used.
+
 ### Step 7: Run the Game
 
 ```powershell
