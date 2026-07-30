@@ -120,6 +120,20 @@ ollama pull qwen2.5:1.5b
 # The game will automatically detect Ollama
 ```
 
+### Step 5️⃣: Train Enemy Decision + Emotion ML Model (MANDATORY ⚠️)
+
+Before running the game with adaptive enemy AI, you **must** generate the enemy behavior ML model:
+
+```bash
+# From repository root
+python game/AI/ML/character_decision_model.py
+```
+
+This command trains and saves:
+
+- `game/AI/models/enemies.pkl`
+
+If this step is skipped, the enemy decision/emotion model may be unavailable at runtime.
 ---
 
 ## ▶️ How to Run the Game
