@@ -11,8 +11,9 @@ This is a step-by-step guide to install and run COMANDO on your machine.
 3. [Installation on macOS](#installation-on-macos)
 4. [Installation on Linux](#installation-on-linux)
 5. [LLM Model Installation (REQUIRED)](#llm-model-installation-required)
-6. [Installation Verification](#installation-verification)
-7. [Troubleshooting](#troubleshooting)
+6. [ML Model Training (REQUIRED)](#ml-model-training-required)
+7. [Installation Verification](#installation-verification)
+8. [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -91,21 +92,9 @@ pip install -r requirements.txt
 
 See [LLM Model Installation (REQUIRED)](#llm-model-installation-required)
 
-### Step 6: Train Enemy Decision + Emotion ML Model (MANDATORY ⚠️)
-
-Before launching the game, you **must** train the enemy behavior model:
-
-```bash
-python game/AI/ML/character_decision_model.py
-```
-
-This generates:
-
-- `game/AI/models/enemies.pkl`
-
-Without this file, enemy AI decision/emotion inference may fail or fallback behavior may be used.
-
 ### Step 7: Run the Game
+
+Before launching the game for the first time, complete [ML Model Training (REQUIRED)](#ml-model-training-required).
 
 ```powershell
 cd game
@@ -169,6 +158,8 @@ pip install -r requirements.txt
 See [LLM Model Installation (REQUIRED)](#llm-model-installation-required)
 
 ### Step 7: Run the Game
+
+Before launching the game for the first time, complete [ML Model Training (REQUIRED)](#ml-model-training-required).
 
 ```bash
 cd game
@@ -236,25 +227,7 @@ See [LLM Model Installation (REQUIRED)](#llm-model-installation-required)
 
 ### Step 7: Run the Game
 
-```bash
-cd game
-python3 main.py
-```
-
-
-```bash
-# Update pip
-python3 -m pip install --upgrade pip
-
-# Install dependencies
-pip install -r requirements.txt
-```
-
-### Step 6: Download LLM Model (REQUIRED ⚠️)
-
-See [LLM Model Installation (REQUIRED)](#llm-model-installation-required)
-
-### Step 7: Run the Game
+Before launching the game for the first time, complete [ML Model Training (REQUIRED)](#ml-model-training-required).
 
 ```bash
 cd game
@@ -295,6 +268,26 @@ ollama pull qwen2.5:1.5b
 
 ---
 
+## ML Model Training (REQUIRED)
+
+Before the first game run, you **must** train the enemy decision + emotion model by executing:
+
+```bash
+# Windows
+python game/AI/ML/character_decision_model.py
+
+# macOS/Linux
+python3 game/AI/ML/character_decision_model.py
+```
+
+This generates:
+
+- `game/AI/models/enemies.pkl`
+
+Without this file, enemy AI decision/emotion inference may fail or fallback behavior may be used.
+
+---
+
 ## Installation Verification
 
 ### Verify Everything is Correctly Installed
@@ -315,6 +308,9 @@ python -c "from PIL import Image; print('✓ Pillow OK')"
 
 # Verify LLM model
 ls -la game/AI/models/qwen2.5-1.5b-instruct-q4_0.gguf
+
+# Verify trained enemy ML model
+ls -la game/AI/models/enemies.pkl
 ```
 
 ### Game Startup Test
@@ -365,6 +361,16 @@ pip install --upgrade pygame
 1. Verify the model is in `game/AI/models/`
 2. The game will fail without the model (AI dialogue is mandatory)
 3. Download from: https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct-GGUF
+
+### ❌ "Cannot find enemies.pkl" or enemy AI behavior is not working
+
+**Solution:**
+1. Run the mandatory training step:
+   ```bash
+   python game/AI/ML/character_decision_model.py   # Windows
+   python3 game/AI/ML/character_decision_model.py  # macOS/Linux
+   ```
+2. Verify the file exists at `game/AI/models/enemies.pkl`
 
 ### ❌ Audio or music doesn't work
 
