@@ -46,7 +46,7 @@ Before getting started, ensure you have installed:
 - **pip** (Python package manager)
 - **Git** (for cloning the repository)
 - **4GB RAM minimum** (8GB recommended)
-- **500MB disk space** (for ML and LLM models)
+- **2GB disk space** (for ML and LLM models)
 - **⚠️ REQUIRED: Qwen 2.5 1.5B LLM Model** (~1.5GB) - See [Installation](#step-4️⃣-download-llm-model-required)
 
 ---
