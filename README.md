@@ -332,45 +332,9 @@ black game/
 # Lint with Flake8
 flake8 game/
 ```
-
-### Generate New Datasets
-
-```bash
-cd game/AI/scripts
-
-# Generate enemy data
-python generate_enemy_dataset.py
-
-# Generate level data
-python generate_level_dataset.py
-```
-
----
-
-## 🤝 Contributions
-
-Contributions are welcome! Please:
-
-1. Fork the repository
-2. Create a branch for your feature (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
----
-
 ## 📄 License
 
 This project is under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
-## 🙏 Acknowledgments
-
-- **Qwen/Alibaba** for the language model
-- **Pygame Community** for excellent documentation
-- **Scikit-learn** for ML tools
-- All contributors and testers
 
 **Enjoy the game! 🎮✨**
 
@@ -380,3 +344,8 @@ This project is under the MIT License - see the [LICENSE](LICENSE) file for deta
 ║  Prepare for battle...          ║
 ╚═════════════════════════════════╝
 ```
+
+📧 Contact
+Created by Gabman8 | View Profile
+
+⭐ If you find this project helpful, please give it a star!
