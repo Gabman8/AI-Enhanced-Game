@@ -345,7 +345,8 @@ This project is under the MIT License - see the [LICENSE](LICENSE) file for deta
 ╚═════════════════════════════════╝
 ```
 
-📧 Contact
-Created by Gabman8 | View Profile
+## 📧 Contact
 
-⭐ If you find this project helpful, please give it a star!
+Created by **Gabman8** | [View Profile](https://github.com/Gabman8)
+
+**⭐ If you find this project helpful, please give it a star!**
