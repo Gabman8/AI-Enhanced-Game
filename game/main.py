@@ -1,5 +1,7 @@
 import pygame
 from pathlib import Path
+import sys
+from importlib import import_module
 
 from levels.generate_level import generate_level
 from levels.adjust_dificulty import DifficultyAdjuster
@@ -19,7 +21,7 @@ SCREEN = pygame.display.set_mode(
 )
 pygame.display.set_caption("Comando")
 
-FPS = 144
+FPS = 60
 DEFAULT_BACKGROUND = "backgrounds/TimesSquare_background.png"
 LEVEL_TRANSITION_DELAY = 1
 
@@ -50,10 +52,10 @@ def _load_dialogue_generator():
 # Load AI manager from the expected source.
 def _load_ai_manager():
     try:
-        from AI.ai_manager import AIManager
         model_path = GAME_ROOT / "AI" / "models" / "enemies.pkl"
         if model_path.exists():
-            return AIManager("enemies.pkl")
+            manager_type = import_module("AI.ai_manager").AIManager
+            return manager_type("enemies.pkl")
     except Exception as exc:
         print(f"[AI] Decision model not available: {exc}")
     return None
@@ -158,6 +160,9 @@ def victory_subtitle():
     return f"Level {completed_level} completed - click to start the next level"
 
 
+smoke_test = "--smoke-test" in sys.argv[1:]
+smoke_test_event_posted = False
+
 while running:
     delta_time = min(clock.tick(FPS) / 1000.0, 0.1)
     pending_action = None
@@ -166,6 +171,9 @@ while running:
 
     for event in events:
         if event.type == pygame.QUIT:
+            running = False
+            break
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_F10:
             running = False
             break
 
@@ -303,5 +311,9 @@ while running:
             main_menu.set_background_image(game.background_image or DEFAULT_BACKGROUND)
             state = "Game"
             pending_level_transition = None
+
+    if smoke_test and not smoke_test_event_posted:
+        pygame.event.post(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_F10))
+        smoke_test_event_posted = True
 
 pygame.quit()

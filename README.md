@@ -25,7 +25,7 @@
 
 ### 🎨 **Visual Experience**
 - **High-quality graphics** with real-world scenes (Times Square background)
-- **Smooth animations** at 144 FPS
+- **Smooth animations** at 60 FPS
 - **Elegant interface** with main menu and completion screen
 - **Dynamic visual effects** during combat
 
@@ -145,7 +145,7 @@ cd game
 python main.py
 ```
 
-The game will launch in fullscreen mode at 2048x1200 with 144 FPS.
+The game will launch in fullscreen mode at 2048x1200 with a 60 FPS cap.
 
 ### Game Controls
 
@@ -157,11 +157,19 @@ The game will launch in fullscreen mode at 2048x1200 with 144 FPS.
 | **J or Left Click** | Attack |
 | **M** | Open pause menu |
 | **Esc** | Exit menu |
+| **F10** | Exit the game at any time |
 
 ### Exit Fullscreen
 
 - **Alt + Tab** (Windows) / **Cmd + Tab** (macOS) / **Alt + Tab** (Linux)
-- Or press **Esc** from the pause menu
+- Or press **F10** to exit immediately
+
+## Builds for Steam
+
+- **Windows:** Run `.\build_windows.ps1` in PowerShell. The tested depot build is written to `steam_upload/windows/Comando/`.
+- **macOS:** Build on the Mac itself with `chmod +x build_macos.sh` followed by `./build_macos.sh`. The script writes `Comando.app` to `steam_upload/mac/` and runs a bounded launch and quit check.
+
+Upload each platform folder as its matching Steam depot after configuring the app and depots in Steamworks. A Windows build cannot create a native macOS app.
 
 ---
 
@@ -248,7 +256,7 @@ Edit `game/main.py` to modify:
 
 ```python
 WIDTH, HEIGHT = 2048, 1200  # Resolution
-FPS = 144                    # Frames per second
+FPS = 60                     # Frames per second
 ```
 
 ### Custom LLM Model

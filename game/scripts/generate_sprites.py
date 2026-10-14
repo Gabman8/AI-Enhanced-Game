@@ -1,14 +1,5 @@
 from pathlib import Path
 
-import cv2
-import numpy as np
-
-try:
-    from rembg import remove
-except ModuleNotFoundError:
-    remove = None
-
-
 CHARACTER = "strong_enemy"
 MIN_SPRITE_AREA = 500
 ALPHA_THRESHOLD = 5
@@ -28,6 +19,9 @@ SPRITE_SHEETS = {
 
 # Remove background from the current data.
 def _remove_background(image_path, output_path):
+    import cv2
+    import numpy as np
+
     img = cv2.imread(str(image_path), cv2.IMREAD_UNCHANGED)
     if img is None:
         raise FileNotFoundError(image_path)
@@ -72,6 +66,9 @@ def _remove_background(image_path, output_path):
 
 # Trim transparent pixels to the meaningful visible area.
 def _trim_transparent_pixels(sprite):
+    import cv2
+    import numpy as np
+
     alpha = sprite[:, :, 3]
     points = cv2.findNonZero((alpha > ALPHA_THRESHOLD).astype(np.uint8))
     if points is None:
@@ -83,6 +80,8 @@ def _trim_transparent_pixels(sprite):
 
 # Find sprite bounds inside the current data.
 def _find_sprite_bounds(img):
+    import cv2
+
     alpha = img[:, :, 3]
     mask = (alpha > ALPHA_THRESHOLD).astype(np.uint8)
     num_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(
@@ -115,6 +114,8 @@ def _clear_old_frames(out_dir):
 
 # Generate sprite sheet for the current workflow.
 def generate_sprite_sheet(name, image_path, out_dir):
+    import cv2
+
     if not image_path.exists():
         raise FileNotFoundError(f"Sprite sheet not found: {image_path}")
 

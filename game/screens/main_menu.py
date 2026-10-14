@@ -18,7 +18,7 @@ class MainMenu:
         self._background_cache_key = None
         self._title_font = self.pygame.font.SysFont("Georgia", 84, bold=True)
         self._subtitle_font = self.pygame.font.SysFont("Georgia", 26, bold=True)
-        self._button_font = self.pygame.font.SysFont("Verdana", 28, bold=True)
+        self._button_font = self.pygame.font.SysFont("Verdana", 30, bold=True)
         self._body_font = self.pygame.font.SysFont("Verdana", 22)
         self._small_font = self.pygame.font.SysFont("Verdana", 18)
         self._button_rects = {}
@@ -61,7 +61,14 @@ class MainMenu:
         self.pygame.draw.rect(surface, border, surface.get_rect(), width=3, border_radius=22)
         self.screen.blit(surface, rect.topleft)
 
-        text_surface = self._button_font.render(label, True, (249, 249, 249))
+        font_size = self._button_font.get_height()
+        horizontal_padding = max(16, int(rect.width * 0.09))
+        while font_size > 16:
+            font = self.pygame.font.SysFont("Verdana", font_size, bold=True)
+            if font.size(label)[0] <= rect.width - horizontal_padding * 2:
+                break
+            font_size -= 1
+        text_surface = font.render(label, True, (249, 249, 249))
         text_rect = text_surface.get_rect(center=rect.center)
         self.screen.blit(text_surface, text_rect)
 
@@ -82,6 +89,7 @@ class MainMenu:
             "J or Left Click  Attack",
             "M  Open pause menu",
             "Esc  Quit from menu",
+            "F10  Exit game anytime",
         ]
         for index, line in enumerate(controls):
             text = self._body_font.render(line, True, (235, 239, 245))
@@ -137,23 +145,25 @@ class MainMenu:
         mouse_pos = self.pygame.mouse.get_pos()
         button_y = left_panel.y + 340
         for name, label, button_action in actions:
-            rect = self.pygame.Rect(left_panel.x + 44, button_y, 330, 72)
+            rect = self.pygame.Rect(left_panel.x + 44, button_y, 430, 76)
             hovered = rect.collidepoint(mouse_pos)
             self._draw_button(label, rect, hovered, accent, secondary=name != "primary")
             self._button_rects[button_action] = rect
-            button_y += 92
+            button_y += 94
 
         # Music toggle button
         music_label = "Music: ON" if music_enabled else "Music: OFF"
-        music_rect = self.pygame.Rect(left_panel.x + 44, button_y, 155, 72)
+        settings_width = 210
+        settings_gap = 20
+        music_rect = self.pygame.Rect(left_panel.x + 44, button_y, settings_width, 76)
         music_hovered = music_rect.collidepoint(mouse_pos)
         self._draw_button(music_label, music_rect, music_hovered, (40, 120, 180), secondary=True)
         self._button_rects["toggle_music"] = music_rect
 
         # Reset difficulty button
-        reset_rect = self.pygame.Rect(left_panel.x + 219, button_y, 155, 72)
+        reset_rect = self.pygame.Rect(left_panel.x + 44 + settings_width + settings_gap, button_y, settings_width, 76)
         reset_hovered = reset_rect.collidepoint(mouse_pos)
-        self._draw_button("Reset Diff.", reset_rect, reset_hovered, (160, 60, 60), secondary=True)
+        self._draw_button("Reset Progress", reset_rect, reset_hovered, (160, 60, 60), secondary=True)
         self._button_rects["reset_difficulty"] = reset_rect
 
         tip = self._small_font.render("Click a button or press Enter to continue.", True, (205, 214, 224))

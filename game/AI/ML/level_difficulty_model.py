@@ -3,14 +3,6 @@ from pathlib import Path
 import joblib
 import numpy as np
 import pandas as pd
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.impute import SimpleImputer
-from sklearn.metrics import mean_absolute_error, mean_squared_error
-from sklearn.model_selection import train_test_split
-from sklearn.multioutput import MultiOutputRegressor
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import StandardScaler
-from sklearn.compose import ColumnTransformer
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 DATA_PATH = BASE_DIR / "datasets" / "dataset_level_difficulty.csv"
@@ -61,6 +53,15 @@ class LevelDifficultyModel:
 
 # Train level difficulty model using the available dataset.
 def train_level_difficulty_model():
+    from sklearn.ensemble import RandomForestRegressor
+    from sklearn.impute import SimpleImputer
+    from sklearn.metrics import mean_absolute_error, mean_squared_error
+    from sklearn.model_selection import train_test_split
+    from sklearn.multioutput import MultiOutputRegressor
+    from sklearn.pipeline import Pipeline
+    from sklearn.preprocessing import StandardScaler
+    from sklearn.compose import ColumnTransformer
+
     data = pd.read_csv(DATA_PATH)
 
     data = data.dropna(subset=FEATURE_COLUMNS + TARGET_COLUMNS)

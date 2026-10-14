@@ -1,10 +1,6 @@
 import json
+from importlib import import_module
 from pathlib import Path
-
-import joblib
-import numpy as np
-
-from AI.ML.level_difficulty_model import LevelDifficultyModel
 
 BASE_DIR = Path(__file__).resolve().parent
 AI_DIR = BASE_DIR.parent / "AI"
@@ -32,8 +28,11 @@ class DifficultyAdjuster:
             return None
 
         try:
+            import joblib
+
             saved = joblib.load(model_path)
-            return LevelDifficultyModel(
+            model_type = import_module("AI.ML.level_difficulty_model").LevelDifficultyModel
+            return model_type(
                 pipeline=saved["pipeline"],
                 feature_columns=saved["feature_columns"],
             )

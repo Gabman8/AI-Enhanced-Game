@@ -4,3 +4,8 @@
 build/
 dist/
 *.spec
+.buildvenv/
+steam_upload/*
+!steam_upload/mac/
+steam_upload/mac/*
+!steam_upload/mac/README.txt
